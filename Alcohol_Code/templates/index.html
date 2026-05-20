@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Máy Đo Nồng Độ Cồn</title>
+    <title>Hệ Thống Giám Sát Nồng Độ Cồn Thông Minh</title>
     <style>
         * {
             margin: 0;
@@ -12,196 +12,395 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: #f8fafc;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
+        .dashboard {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 35px;
+            max-width: 600px;
             width: 100%;
-            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 25px;
         }
 
-        .alcohol-display {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin: 30px 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        /* Bộ chọn loại phương tiện */
+        .vehicle-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .vehicle-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .vehicle-btn:hover {
+            border-color: #6366f1;
+            color: #ffffff;
+        }
+
+        .vehicle-btn.active {
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+            color: #ffffff;
+            border-color: #818cf8;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Khung hiển thị nồng độ cồn */
+        .display-card {
+            background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3);
+            transition: all 0.5s ease;
+        }
+
+        .display-card.danger {
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%) !important;
+            box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.5) !important;
+            animation: pulse-danger 1.5s infinite alternate;
         }
 
         .value-label {
-            font-size: 18px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             opacity: 0.9;
+            margin-bottom: 5px;
         }
 
         .value-number {
             font-size: 64px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            font-family: 'Arial Black', sans-serif;
+            line-height: 1;
         }
 
         .unit {
-            font-size: 28px;
-            margin-left: 10px;
+            font-size: 22px;
+            font-weight: 600;
+            margin-left: 5px;
         }
 
-        .status {
-            margin-top: 30px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
+        /* Khung hiển thị chi tiết mức phạt */
+        .penalty-card {
+            background: #0f172a;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #334155;
+            text-align: left;
+            display: none;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
         }
 
-        .status.connected {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 1.5s infinite;
-        }
-
-        .status.connected .status-indicator {
-            background-color: #28a745;
-        }
-
-        .status.disconnected .status-indicator {
-            background-color: #dc3545;
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .info {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        .refresh-rate {
-            color: #666;
-            margin-top: 15px;
+        .penalty-header {
+            color: #f87171;
             font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 8px;
+        }
+
+        .penalty-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .penalty-item {
+            background: #1e293b;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .item-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .item-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        /* Thanh trạng thái kết nối */
+        .status-bar {
+            margin-top: 25px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-bar.connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-bar.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .connected .dot {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .disconnected .dot {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        @keyframes pulse-danger {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.02); }
+        }
+
+        .footer-info {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #475569;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📊 Máy Đo Nồng Độ Cồn</h1>
-        <p class="subtitle">IoT Alcohol Detection System</p>
+    <div class="dashboard">
+        <h1>📊 Trung Tâm Giám Sát ATGT</h1>
+        <p class="subtitle">Hệ Thống Quản Lý Nồng Độ Cồn Thông Minh</p>
 
-        <div class="alcohol-display">
-            <div class="value-label">Nồng độ cồn hiện tại</div>
+        <div class="vehicle-selector">
+            <button id="btn-motor" class="vehicle-btn active" onclick="setVehicleType('motor')">
+                🏍️ XE MÔ TÔ, XE GẮN MÁY
+            </button>
+            <button id="btn-car" class="vehicle-btn" onclick="setVehicleType('car')">
+                🚗 XE Ô TÔ
+            </button>
+        </div>
+
+        <div id="display-box" class="display-card">
+            <div id="label-text" class="value-label">HỆ THỐNG AN TOÀN</div>
             <div class="value-number">
-                <span id="alcohol-value">--</span><span class="unit">%</span>
+                <span id="display-number">0.00</span><span class="unit">mg/L</span>
             </div>
         </div>
 
-        <div id="status" class="status disconnected">
-            <span class="status-indicator"></span>
-            <span id="status-text">Đang kết nối...</span>
+        <div id="penalty-box" class="penalty-card">
+            <div class="penalty-header">🚨 CHI TIẾT HÌNH PHẠT HÀNH CHÍNH (NGHỊ ĐỊNH 100)</div>
+            <div class="penalty-grid">
+                <div class="penalty-item">
+                    <div class="item-label">Mức phạt tiền:</div>
+                    <div id="p-money" class="item-value">--</div>
+                </div>
+                <div class="penalty-item" style="border-left-color: #f59e0b;">
+                    <div class="item-label">Biện pháp xử lý GPLX:</div>
+                    <div id="p-license" class="item-value">--</div>
+                </div>
+                <div class="penalty-item" style="border-left-color: #3b82f6;">
+                    <div class="item-label">Điểm GPLX bị trừ:</div>
+                    <div id="p-points" class="item-value">--</div>
+                </div>
+            </div>
         </div>
 
-        <div class="refresh-rate">
-            ⟳ Cập nhật: Mỗi 500ms
+        <div id="status-box" class="status-bar disconnected">
+            <span class="dot"></span>
+            <span id="status-text">Đang kết nối tới phần cứng Proteus...</span>
         </div>
 
-        <div class="info">
-            <p>Cổng: COM2 | Baudrate: 9600</p>
-            <p>Địa chỉ: <code>/api/alcohol</code></p>
+        <div class="footer-info">
+            <span>Cổng: <b>COM2</b></span>
+            <span>Tốc độ: <b>9600 Baud</b></span>
+            <span>Chu kỳ: <b>500ms</b></span>
         </div>
     </div>
 
     <script>
-        const alcoholValue = document.getElementById('alcohol-value');
-        const statusDiv = document.getElementById('status');
-        const statusText = document.getElementById('status-text');
+        // Mặc định ban đầu loại xe là 'motor'
+        let currentVehicleType = 'motor'; 
 
-        // Hàm gọi API để lấy dữ liệu nồng độ cồn
-        async function fetchAlcoholData() {
-            try {
-                const response = await fetch('/api/alcohol');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+        function setVehicleType(type) {
+            currentVehicleType = type;
+            document.getElementById('btn-motor').classList.toggle('active', type === 'motor');
+            document.getElementById('btn-car').classList.toggle('active', type === 'car');
+            
+            // Ép hệ thống tính toán lại ngay lập tức khi bấm đổi phương tiện
+            fetchRealtimeData(); 
+        }
+
+        function evaluatePenalty(mgLValue) {
+            const penaltyBox = document.getElementById('penalty-box');
+            const pMoney = document.getElementById('p-money');
+            const pLicense = document.getElementById('p-license');
+            const pPoints = document.getElementById('p-points');
+            const displayBox = document.getElementById('display-box');
+            const labelText = document.getElementById('label-text');
+
+            // Ngưỡng lọc nhiễu cảm biến an toàn (0.02 mg/L khí thở)
+            if (mgLValue <= 0.02) {
+                if (penaltyBox) penaltyBox.style.display = 'none';
+                if (displayBox) displayBox.classList.remove('danger');
+                if (labelText) labelText.innerText = "TRẠNG THÁI: AN TOÀN";
+                return;
+            }
+
+            // Kích hoạt trạng thái báo động đỏ nguy hiểm
+            if (displayBox) displayBox.classList.add('danger');
+            if (penaltyBox) penaltyBox.style.display = 'block';
+            if (labelText) labelText.innerText = "CẢNH BÁO: PHÁT HIỆN VI PHẠM!";
+
+            // Áp dụng thuật toán rẽ nhánh phân loại mức phạt theo yêu cầu chính xác của bạn
+            if (currentVehicleType === 'motor') {
+                // LOGIC XỬ PHẠT XE MÔ TÔ, XE GẮN MÁY
+                if (mgLValue > 0.02 && mgLValue <= 0.25) {
+                    pMoney.innerText = "2.000.000 - 3.000.000 VNĐ";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 10 - 12 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 4 điểm Giấy phép lái xe.";
+                } else if (mgLValue > 0.25 && mgLValue <= 0.40) {
+                    pMoney.innerText = "6.000.000 - 8.000.000 VNĐ";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 16 - 18 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 10 điểm Giấy phép lái xe.";
+                } else if (mgLValue > 0.40) {
+                    pMoney.innerText = "8.000.000 - 10.000.000 VNĐ (Mức kịch khung)";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 22 - 24 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 10 điểm Giấy phép lái xe.";
                 }
-
-                const data = await response.json();
-                
-                // Cập nhật giá trị hiển thị
-                alcoholValue.textContent = data.alcohol_level.toFixed(2);
-                
-                // Cập nhật trạng thái dựa trên kết nối serial
-                if (data.connected) {
-                    statusDiv.classList.remove('disconnected');
-                    statusDiv.classList.add('connected');
-                    statusText.textContent = '✓ Đã kết nối';
-                } else {
-                    statusDiv.classList.remove('connected');
-                    statusDiv.classList.add('disconnected');
-                    statusText.textContent = '✗ Chờ kết nối COM2...';
+            } else if (currentVehicleType === 'car') {
+                // LOGIC XỬ PHẠT XE Ô TÔ
+                if (mgLValue > 0.02 && mgLValue <= 0.25) {
+                    pMoney.innerText = "6.000.000 - 8.000.000 VNĐ";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 10 - 12 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 4 điểm Giấy phép lái xe.";
+                } else if (mgLValue > 0.25 && mgLValue <= 0.40) {
+                    pMoney.innerText = "18.000.000 - 20.000.000 VNĐ";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 16 - 18 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 10 điểm Giấy phép lái xe.";
+                } else if (mgLValue > 0.40) {
+                    pMoney.innerText = "30.000.000 - 40.000.000 VNĐ (Mức kịch khung)";
+                    pLicense.innerText = "Tước quyền sử dụng GPLX từ 22 - 24 tháng. Tạm giữ phương tiện đến 07 ngày.";
+                    pPoints.innerText = "Trừ 10 điểm Giấy phép lái xe.";
                 }
-
-            } catch (error) {
-                console.error('Lỗi khi lấy dữ liệu:', error);
-                
-                alcoholValue.textContent = '--';
-                
-                statusDiv.classList.remove('connected');
-                statusDiv.classList.add('disconnected');
-                statusText.textContent = '✗ Lỗi kết nối server';
             }
         }
 
-        // Gọi API lần đầu tiên
-        fetchAlcoholData();
+        async function fetchRealtimeData() {
+            try {
+                const response = await fetch('/api/alcohol');
+                if (!response.ok) return;
 
-        // Gọi API mỗi 500ms
-        setInterval(fetchAlcoholData, 500);
+                const data = await response.json();
+                
+                // Nhận giá trị thô từ biến trở Proteus (0 - 1023)
+                const rawLevel = parseFloat(data.alcohol_level);
+                
+                // Thuật toán quy đổi giá trị thô ra đơn vị đo thực tế khí thở (mg/L)
+                const mgLValue = rawLevel / 1000.0;
+
+                // Đồng bộ số thực tế lên màn hình chính
+                const numElement = document.getElementById('display-number');
+                if (numElement) {
+                    numElement.textContent = !isNaN(mgLValue) ? mgLValue.toFixed(2) : "0.00";
+                }
+
+                // Cập nhật trạng thái kết nối
+                const statusBox = document.getElementById('status-box');
+                const statusText = document.getElementById('status-text');
+
+                if (data.connected) {
+                    if (statusBox) statusBox.className = "status-bar connected";
+                    if (statusText) statusText.textContent = "✓ Thiết bị Proteus kết nối ổn định (Realtime)";
+                    
+                    if (!isNaN(mgLValue)) {
+                        evaluatePenalty(mgLValue);
+                    }
+                } else {
+                    if (statusBox) statusBox.className = "status-bar disconnected";
+                    if (statusText) statusText.textContent = "✗ Mất kết nối cổng COM2, đang thử lại...";
+                    if (document.getElementById('penalty-box')) document.getElementById('penalty-box').style.display = 'none';
+                    if (document.getElementById('display-box')) document.getElementById('display-box').classList.remove('danger');
+                }
+
+            } catch (error) {
+                console.error("Lỗi đồng bộ dữ liệu UI:", error);
+                if (document.getElementById('status-box')) {
+                    document.getElementById('status-box').className = "status-bar disconnected";
+                    document.getElementById('status-text').textContent = "✗ Không thể kết nối tới Flask Server";
+                }
+            }
+        }
+
+        // Tạo vòng lặp vô hạn chạy ngầm cập nhật UI mỗi 500ms
+        setInterval(fetchRealtimeData, 500);
+        fetchRealtimeData();
     </script>
 </body>
 </html>
