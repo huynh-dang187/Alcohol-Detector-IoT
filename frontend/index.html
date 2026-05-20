@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Giám Sát Nồng Độ Cồn - Dashboard</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-dark">
+    
+    <div class="container mx-auto p-4 max-w-7xl">
+        
+        <!-- HEADER -->
+        <header class="py-6 animate-slideDown">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    📊 HỆ THỐNG GIÁM SÁT NỒNG ĐỘ CỒN
+                </h1>
+                <p class="text-gray-400">IoT Realtime Alcohol Detection & Traffic Violation Recording</p>
+            </div>
+        </header>
+        
+        <!-- CONNECTION STATUS -->
+        <div class="mb-6 animate-fadeIn">
+            <div id="connection-status" class="text-center p-3 rounded-lg bg-gray-700 text-gray-100 border border-gray-600">
+                <span>Đang kết nối...</span>
+            </div>
+        </div>
+        
+        <!-- MAIN DISPLAY SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            
+            <!-- LEFT: Alcohol Level Display -->
+            <div class="lg:col-span-2 animate-fadeIn">
+                <div id="display-box" class="card bg-green-500 text-white p-12 rounded-lg text-center transition-all duration-500">
+                    <p id="status-label" class="text-xl font-semibold mb-6">✓ Hệ thống an toàn</p>
+                    <div class="large-number mb-4">
+                        <span id="alcohol-value">0.0</span>
+                    </div>
+                    <p class="text-lg">mg/L (Milligram/Liter)</p>
+                </div>
+            </div>
+            
+            <!-- RIGHT: Violation Info Panel -->
+            <div class="animate-fadeIn">
+                <div id="violation-panel" class="card bg-red-50 border-red-300 hidden">
+                    <h3 class="text-lg font-bold text-red-900 mb-4">🚨 VI PHẠM GIAO THÔNG</h3>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Mức phạt:</p>
+                        <p id="penalty-level" class="text-2xl font-bold text-red-700">Mức 1</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Tiền phạt:</p>
+                        <p id="penalty-money" class="text-xl font-bold text-red-600">6-8 triệu VNĐ</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Điểm trừ:</p>
+                        <p id="penalty-points" class="text-xl font-bold text-red-600">3 điểm</p>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-red-300">
+                        <p class="text-xs text-red-900">⚠ Tước GPLX, tạm giữ phương tiện theo quy định pháp luật</p>
+                    </div>
+                </div>
+                
+                <!-- Safe Status Panel -->
+                <div id="safe-panel" class="card bg-green-50 border-green-300">
+                    <h3 class="text-lg font-bold text-green-900 mb-4">✓ TRẠNG THÁI AN TOÀN</h3>
+                    <p class="text-sm text-green-700">
+                        Không phát hiện vi phạm. Nồng độ cồn trong ngưỡng an toàn (&le; 0.25 mg/L).
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VIOLATION RECORDING SECTION -->
+        <div class="card animate-fadeIn mb-6">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-4">
+                📋 GHI NHẬN VI PHẠM
+            </h2>
+            
+            <!-- Notification Container -->
+            <div id="notification-container" class="mb-4"></div>
+            
+            <!-- Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                
+                <!-- Họ Tên -->
+                <div>
+                    <label class="form-label">Họ và Tên</label>
+                    <input 
+                        type="text" 
+                        id="input-ho-ten" 
+                        class="form-input" 
+                        placeholder="Nguyễn Văn A"
+                    >
+                </div>
+                
+                <!-- CCCD -->
+                <div>
+                    <label class="form-label">Số CCCD/CMT</label>
+                    <input 
+                        type="text" 
+                        id="input-cccd" 
+                        class="form-input" 
+                        placeholder="123456789"
+                    >
+                </div>
+                
+                <!-- Biển Số -->
+                <div>
+                    <label class="form-label">Biển Số Xe</label>
+                    <input 
+                        type="text" 
+                        id="input-bien-so" 
+                        class="form-input" 
+                        placeholder="30A-12345"
+                    >
+                </div>
+                
+                <!-- Loại Xe -->
+                <div>
+                    <label class="form-label">Loại Xe</label>
+                    <select id="input-loai-xe" class="form-input">
+                        <option value="oto_va_xe_tuong_tu">Ô tô và xe tương tự</option>
+                        <option value="xe_may_xe_gan_may">Xe máy/Xe gắn máy</option>
+                    </select>
+                </div>
+                
+                <!-- Ghi Chú -->
+                <div class="md:col-span-2">
+                    <label class="form-label">Ghi Chú</label>
+                    <input 
+                        type="text" 
+                        id="input-ghi-chu" 
+                        class="form-input" 
+                        placeholder="Vị trí: Đường Nguyễn Huệ, HCM"
+                    >
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-3 flex-wrap">
+                <button 
+                    id="btn-record-violation" 
+                    class="btn btn-danger flex-1"
+                >
+                    ✓ GHI NHẬN VI PHẠM
+                </button>
+                
+                <button 
+                    id="btn-view-history" 
+                    class="btn btn-primary flex-1"
+                >
+                    📊 XEM LỊCH SỬ
+                </button>
+            </div>
+        </div>
+        
+        <!-- INFO SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            
+            <!-- Info Box 1 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">CỔNG KẾT NỐI</p>
+                <p class="text-2xl font-bold text-blue-400">COM2</p>
+            </div>
+            
+            <!-- Info Box 2 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">TỐC ĐỘ BAUD</p>
+                <p class="text-2xl font-bold text-blue-400">9600 bps</p>
+            </div>
+            
+            <!-- Info Box 3 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">TẦN SUẤT CẬP NHẬT</p>
+                <p class="text-2xl font-bold text-blue-400">500 ms</p>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <footer class="text-center text-gray-500 text-sm py-6 border-t border-gray-700">
+            <p>© 2026 Hệ Thống Giám Sát Nồng Độ Cồn IoT - Bộ Công An</p>
+            <p class="mt-2 text-xs">Version 2.0 | Backend API: http://localhost:5000 | Frontend: Production Ready</p>
+        </footer>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    
+</body>
+</html>
