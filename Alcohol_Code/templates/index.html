@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy Đo Nồng Độ Cồn</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .alcohol-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .value-label {
+            font-size: 18px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .value-number {
+            font-size: 64px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .unit {
+            font-size: 28px;
+            margin-left: 10px;
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.connected .status-indicator {
+            background-color: #28a745;
+        }
+
+        .status.disconnected .status-indicator {
+            background-color: #dc3545;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .refresh-rate {
+            color: #666;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Máy Đo Nồng Độ Cồn</h1>
+        <p class="subtitle">IoT Alcohol Detection System</p>
+
+        <div class="alcohol-display">
+            <div class="value-label">Nồng độ cồn hiện tại</div>
+            <div class="value-number">
+                <span id="alcohol-value">--</span><span class="unit">%</span>
+            </div>
+        </div>
+
+        <div id="status" class="status disconnected">
+            <span class="status-indicator"></span>
+            <span id="status-text">Đang kết nối...</span>
+        </div>
+
+        <div class="refresh-rate">
+            ⟳ Cập nhật: Mỗi 500ms
+        </div>
+
+        <div class="info">
+            <p>Cổng: COM2 | Baudrate: 9600</p>
+            <p>Địa chỉ: <code>/api/alcohol</code></p>
+        </div>
+    </div>
+
+    <script>
+        const alcoholValue = document.getElementById('alcohol-value');
+        const statusDiv = document.getElementById('status');
+        const statusText = document.getElementById('status-text');
+
+        // Hàm gọi API để lấy dữ liệu nồng độ cồn
+        async function fetchAlcoholData() {
+            try {
+                const response = await fetch('/api/alcohol');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Cập nhật giá trị hiển thị
+                alcoholValue.textContent = data.alcohol_level.toFixed(2);
+                
+                // Cập nhật trạng thái dựa trên kết nối serial
+                if (data.connected) {
+                    statusDiv.classList.remove('disconnected');
+                    statusDiv.classList.add('connected');
+                    statusText.textContent = '✓ Đã kết nối';
+                } else {
+                    statusDiv.classList.remove('connected');
+                    statusDiv.classList.add('disconnected');
+                    statusText.textContent = '✗ Chờ kết nối COM2...';
+                }
+
+            } catch (error) {
+                console.error('Lỗi khi lấy dữ liệu:', error);
+                
+                alcoholValue.textContent = '--';
+                
+                statusDiv.classList.remove('connected');
+                statusDiv.classList.add('disconnected');
+                statusText.textContent = '✗ Lỗi kết nối server';
+            }
+        }
+
+        // Gọi API lần đầu tiên
+        fetchAlcoholData();
+
+        // Gọi API mỗi 500ms
+        setInterval(fetchAlcoholData, 500);
+    </script>
+</body>
+</html>
