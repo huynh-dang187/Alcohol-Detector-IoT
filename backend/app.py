@@ -283,6 +283,52 @@ def api_create_violation():
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
+@app.route('/api/violations', methods=['GET'])
+def api_get_violations():
+    """
+    GET /api/violations?limit=50
+    Lấy danh sách lịch sử vi phạm
+    
+    Query params:
+    - limit: Số lượng record tối đa (default: 50)
+    
+    Response:
+    {
+        "status": "success",
+        "violations": [
+            {
+                "id": 1,
+                "name": "Nguyễn Văn A",
+                "cccd": "012345678910",
+                "license_plate": "30A-12345",
+                "vehicle_type": "car",
+                "alcohol_level": 0.15,
+                "fine_amount": 4000000,
+                "points_deducted": 4,
+                "created_at": "2026-05-21T12:34:56"
+            }
+        ],
+        "total": 1
+    }
+    """
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        violations = get_all_violations(limit=limit)
+        
+        print(f"[API] GET /api/violations → {len(violations)} bản ghi")
+        
+        return jsonify({
+            'status': 'success',
+            'violations': violations,
+            'total': len(violations),
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    
+    except Exception as e:
+        print(f"[API] ✗ Lỗi GET /api/violations: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/api/stats', methods=['GET'])
 def api_get_stats():
     """
@@ -335,6 +381,18 @@ def health_check():
         'status': 'healthy',
         'timestamp': datetime.now().isoformat()
     }), 200
+
+
+@app.route('/debug/routes', methods=['GET'])
+def debug_routes():
+    """Debug endpoint to list all registered routes"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'rule': str(rule),
+            'methods': list(rule.methods - {'OPTIONS', 'HEAD'})
+        })
+    return jsonify({'routes': routes}), 200
 
 
 @app.errorhandler(404)
