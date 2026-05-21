@@ -14,7 +14,6 @@
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="text-3xl">🍷</span>
                     <h1 class="text-2xl font-bold text-white">CSGT Cồn - Dashboard</h1>
                 </div>
                 <div class="flex items-center gap-6">
@@ -22,7 +21,7 @@
                         <p class="text-gray-400 text-sm">Đăng nhập:</p>
                         <p id="user-fullname" class="text-white font-semibold">-</p>
                     </div>
-                    <button id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">↪️ Đăng Xuất</button>
+                    <button id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">Đăng Xuất</button>
                 </div>
             </div>
         </div>
@@ -34,22 +33,22 @@
         <!-- ========== LEFT SIDEBAR ========== -->
         <aside class="w-56 bg-gray-800 border-r border-gray-700 overflow-y-auto">
             <div class="p-6">
-                <h2 class="text-lg font-bold text-white mb-6">📌 MENU</h2>
+                <h2 class="text-lg font-bold text-white mb-6">MENU</h2>
                 
                 <nav class="space-y-2">
                     <!-- Dashboard Tab -->
                     <button class="nav-item active w-full text-left px-4 py-3 rounded-lg font-semibold transition" data-tab="dashboard">
-                        📊 Dashboard
+                        Dashboard
                     </button>
                     
                     <!-- History Tab -->
                     <button class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition" data-tab="history">
-                        📋 Lịch Sử Vi Phạm
+                        Lịch Sử Vi Phạm
                     </button>
                     
                     <!-- Stats Tab (Admin only) -->
                     <button id="btn-stats-tab" class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition hidden" data-tab="stats">
-                        📈 Thống Kê
+                        Thống Kê
                     </button>
                 </nav>
             </div>
@@ -62,7 +61,7 @@
                 <!-- Connection Status -->
                 <div class="mb-6">
                     <div id="connection-status" class="p-4 rounded-lg text-center font-semibold text-white bg-gray-700 border border-gray-600">
-                        <span id="status-text">⏳ Đang kết nối...</span>
+                        <span id="status-text">Đang kết nối...</span>
                     </div>
                 </div>
                 
@@ -71,7 +70,7 @@
                     
                     <!-- Ghi Nhận Vi Phạm Form -->
                     <div class="card-dark rounded-lg p-8 border border-gray-700">
-                        <h2 class="text-2xl font-bold text-white mb-6">📋 Ghi Nhận Vi Phạm</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6">Ghi Nhận Vi Phạm</h2>
                         
                         <form id="violation-form" class="space-y-4">
                             <!-- Row 1: Name & CCCD -->
@@ -133,7 +132,7 @@
                             
                             <!-- Penalty Info Display -->
                             <div id="penalty-info" class="p-4 rounded-lg bg-gray-800 border border-gray-700 hidden">
-                                <p class="text-gray-300 text-sm mb-3 font-semibold">⚠️ Thông tin mục phạt:</p>
+                                <p class="text-gray-300 text-sm mb-3 font-semibold">Thông tin mục phạt:</p>
                                 <div class="grid grid-cols-3 gap-4">
                                     <div>
                                         <p class="text-xs text-gray-400">Mức phạt</p>
@@ -153,10 +152,10 @@
                             <!-- Submit Buttons -->
                             <div class="flex gap-4 pt-4">
                                 <button type="submit" class="flex-1 px-6 py-3 rounded font-bold text-white bg-green-600 hover:bg-green-700 transition">
-                                    ✅ Ghi Nhận Vi Phạm
+                                    Ghi Nhận Vi Phạm
                                 </button>
                                 <button type="reset" class="flex-1 px-6 py-3 rounded font-bold text-white bg-gray-600 hover:bg-gray-700 transition">
-                                    🔄 Làm Lại
+                                    Làm Lại
                                 </button>
                             </div>
                         </form>
@@ -166,14 +165,14 @@
                 <!-- ===== HISTORY VIEW ===== -->
                 <div id="tab-history" class="tab-content hidden space-y-6">
                     <div class="card-dark rounded-lg p-8 border border-gray-700">
-                        <h2 class="text-2xl font-bold text-white mb-6">📋 Lịch Sử Vi Phạm</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6">Lịch Sử Vi Phạm</h2>
                         
                         <div id="history-controls" class="mb-6 flex gap-4">
                             <button id="btn-refresh-history" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
-                                🔄 Tải Lại
+                                Tải Lại
                             </button>
                             <button id="btn-export-history" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition">
-                                💾 Xuất CSV
+                                Xuất CSV
                             </button>
                         </div>
                         
@@ -196,7 +195,7 @@
                                 <tbody id="history-table-body" class="text-gray-200">
                                     <tr>
                                         <td colspan="9" class="text-center py-8 text-gray-400">
-                                            ⏳ Đang tải...
+                                            Đang tải...
                                         </td>
                                     </tr>
                                 </tbody>
@@ -205,7 +204,7 @@
                         
                         <!-- No Data Message -->
                         <div id="history-empty" class="text-center py-8 text-gray-400 hidden">
-                            <p class="text-lg">📭 Chưa có lịch sử vi phạm nào</p>
+                            <p class="text-lg">Chưa có lịch sử vi phạm nào</p>
                         </div>
                     </div>
                 </div>
@@ -247,33 +246,33 @@
                 
                 <!-- Realtime Alcohol Display -->
                 <div class="card-dark rounded-lg p-8 border border-gray-700 text-center">
-                    <p class="text-gray-400 text-sm mb-4 font-semibold">NỒ NG ĐỘ CỒN REALTIME</p>
+                    <p class="text-gray-400 text-sm mb-4 font-semibold">NỒNG ĐỘ CỒN REALTIME</p>
                     
                     <div id="display-box" class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-8 mb-6">
                         <div class="text-5xl font-bold text-white mb-2">
                             <span id="alcohol-value">0.00</span>
                         </div>
                         <p class="text-white text-lg">mg/L</p>
-                        <p id="status-label" class="text-white text-sm mt-2 font-semibold">✓ An toàn</p>
+                        <p id="status-label" class="text-white text-sm mt-2 font-semibold">An toàn</p>
                     </div>
                     
                     <!-- Mode Buttons -->
                     <div class="space-y-3">
                         <button id="btn-auto-mode" class="w-full px-4 py-3 rounded font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
-                            ⚡ Tự động đo
+                            Tự động đo
                         </button>
                         <button id="btn-manual-mode" class="w-full px-4 py-3 rounded font-semibold text-white bg-gray-600 hover:bg-gray-700 transition">
-                            ✋ Đo thủ công
+                            Đo thủ công
                         </button>
                         <button id="btn-trigger-manual" class="w-full px-4 py-3 rounded font-bold text-white bg-red-600 hover:bg-red-700 transition hidden">
-                            🎯 KÍCH HOẠT
+                            KÍCH HOẠT
                         </button>
                     </div>
                 </div>
                 
                 <!-- Penalty Legend -->
                 <div class="card-dark rounded-lg p-6 border border-gray-700">
-                    <h3 class="text-lg font-bold text-white mb-4">📊 Bảng Mức Phạt</h3>
+                    <h3 class="text-lg font-bold text-white mb-4">Bảng Mức Phạt</h3>
                     <div class="space-y-3 text-sm">
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded bg-green-500"></div>
@@ -281,26 +280,26 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded bg-yellow-500"></div>
-                            <span class="text-gray-300">Mức 1 ⚠️</span>
+                            <span class="text-gray-300">Mức 1</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded bg-orange-500"></div>
-                            <span class="text-gray-300">Mức 2 ⚠️</span>
+                            <span class="text-gray-300">Mức 2</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded bg-red-500"></div>
-                            <span class="text-gray-300">Mức 3 🚨</span>
+                            <span class="text-gray-300">Mức 3</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-4 h-4 rounded bg-red-900"></div>
-                            <span class="text-gray-300">Mức 4 🚨</span>
+                            <span class="text-gray-300">Mức 4</span>
                         </div>
                     </div>
                 </div>
                 
                 <!-- System Info -->
                 <div class="card-dark rounded-lg p-6 border border-gray-700">
-                    <h3 class="text-lg font-bold text-white mb-4">ℹ️ Thông Tin Hệ Thống</h3>
+                    <h3 class="text-lg font-bold text-white mb-4">Thông Tin Hệ Thống</h3>
                     <div class="space-y-3 text-sm">
                         <div>
                             <p class="text-gray-400">Cổng COM:</p>

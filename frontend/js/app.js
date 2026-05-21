@@ -147,7 +147,7 @@ function updateConnectionStatus(connected) {
     
     if (connected) {
         statusDiv.className = 'p-4 rounded-lg text-center font-semibold text-white bg-green-900 border border-green-700';
-        statusText.textContent = '✓ Kết nối thành công (COM2 @ 9600 baud)';
+        statusText.textContent = 'Kết nối thành công (COM2 @ 9600 baud)';
     } else {
         statusDiv.className = 'p-4 rounded-lg text-center font-semibold text-white bg-red-900 border border-red-700';
         statusText.textContent = '✗ Mất kết nối. Kiểm tra cổng COM2...';
@@ -165,27 +165,25 @@ function updateDisplayBox(alcoholLevel) {
     
     if (vehicleType === 'car') {
         if (alcoholLevel <= 0.04) {
-            level = 'An toàn'; color = 'green'; message = '✓ Không vi phạm';
+            level = 'An toàn'; color = 'green'; message = 'Không vi phạm';
         } else if (alcoholLevel <= 0.08) {
-            level = 'Mức 1'; color = 'yellow'; message = '⚠️ Mức phạt 1';
+            level = 'Mức 1'; color = 'yellow'; message = 'Mức phạt 1';
         } else if (alcoholLevel <= 0.15) {
-            level = 'Mức 2'; color = 'orange'; message = '⚠️ Mức phạt 2';
+            level = 'Mức 2'; color = 'orange'; message = 'Mức phạt 2';
         } else if (alcoholLevel <= 0.25) {
-            level = 'Mức 3'; color = 'red'; message = '🚨 Mức phạt 3';
+            level = 'Mức 3'; color = 'red'; message = 'Mức phạt 3';
         } else {
-            level = 'Mức 4'; color = 'darkred'; message = '🚨 Mức phạt 4';
+            level = 'Mức 4'; color = 'darkred'; message = 'Mức phạt 4';
         }
     } else {
         if (alcoholLevel <= 0.03) {
-            level = 'An toàn'; color = 'green'; message = '✓ Không vi phạm';
-        } else if (alcoholLevel <= 0.05) {
-            level = 'Mức 1'; color = 'yellow'; message = '⚠️ Mức phạt 1';
+            level = 'An toàn'; color = 'green'; message = 'Không vi phạm';
         } else if (alcoholLevel <= 0.08) {
-            level = 'Mức 2'; color = 'orange'; message = '⚠️ Mức phạt 2';
+            level = 'Mức 2'; color = 'orange'; message = 'Mức phạt 2';
         } else if (alcoholLevel <= 0.15) {
-            level = 'Mức 3'; color = 'red'; message = '🚨 Mức phạt 3';
+            level = 'Mức 3'; color = 'red'; message = 'Mức phạt 3';
         } else {
-            level = 'Mức 4'; color = 'darkred'; message = '🚨 Mức phạt 4';
+            level = 'Mức 4'; color = 'darkred'; message = 'Mức phạt 4';
         }
     }
     
@@ -246,7 +244,7 @@ async function triggerManualMeasurement() {
     const originalText = btn.textContent;
     
     btn.disabled = true;
-    btn.textContent = '⏳ Đang ghi nhận...';
+    btn.textContent = 'Đang ghi nhận...';
     
     try {
         const response = await fetch(`${API_URL}/trigger-manual`, {
@@ -263,11 +261,11 @@ async function triggerManualMeasurement() {
                 alcoholInput.value = peakValue.toFixed(2);
                 alcoholInput.dispatchEvent(new Event('input'));
             }
-            showNotification(`✅ Đo thủ công: ${peakValue.toFixed(2)} mg/L`, 'success');
+            showNotification(`Đo thủ công: ${peakValue.toFixed(2)} mg/L`, 'success');
         }
     } catch (error) {
         console.error('Error triggering manual measurement:', error);
-        showNotification('❌ Lỗi kích hoạt đo thủ công', 'error');
+        showNotification('Lỗi kích hoạt đo thủ công', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -343,14 +341,14 @@ async function submitViolation(e) {
     };
     
     if (!data.name || !data.cccd || !data.age || !data.gender || !data.license_plate || !data.vehicle_type || !data.alcohol_level) {
-        showNotification('❌ Vui lòng điền đầy đủ thông tin (*)', 'error');
+        showNotification('Vui lòng điền đầy đủ thông tin (*)', 'error');
         return;
     }
     
     const submitBtn = document.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Đang ghi nhận...';
+    submitBtn.textContent = 'Đang ghi nhận...';
     
     try {
         const response = await fetch(`${API_URL}/violation`, {
@@ -363,18 +361,18 @@ async function submitViolation(e) {
         
         if (result.status === 'success') {
             showNotification(
-                `✅ Ghi nhận thành công! Mức phạt: ${result.penalty_level} | Tiền phạt: ${result.fine_amount}`,
+                `Ghi nhận thành công! Mức phạt: ${result.penalty_level} | Tiền phạt: ${result.fine_amount}`,
                 'success'
             );
             
             document.getElementById('violation-form').reset();
             document.getElementById('penalty-info').classList.add('hidden');
         } else {
-            showNotification(`❌ ${result.message || 'Lỗi ghi nhận'}`, 'error');
+            showNotification(`${result.message || 'Lỗi ghi nhận'}`, 'error');
         }
     } catch (error) {
         console.error('Error submitting violation:', error);
-        showNotification('❌ Lỗi kết nối server', 'error');
+        showNotification('Lỗi kết nối server', 'error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -393,7 +391,7 @@ async function loadViolationHistory() {
         }
     } catch (error) {
         console.error('Error loading violation history:', error);
-        showNotification('❌ Lỗi tải lịch sử vi phạm', 'error');
+        showNotification('Lỗi tải lịch sử vi phạm', 'error');
     }
 }
 
@@ -410,7 +408,8 @@ function displayViolationHistory(violations) {
     emptyMsg.classList.add('hidden');
     
     tbody.innerHTML = violations.map((v, index) => {
-        const createdAt = new Date(v.created_at).toLocaleString('vi-VN');
+        // created_at đã được format từ backend: "21/05/2026 12:34:56"
+        const createdAt = v.created_at;
         const vehicleType = v.vehicle_type === 'car' ? 'Ô tô' : 'Xe máy';
         
         return `
@@ -435,7 +434,7 @@ function exportHistoryAsCSV() {
         const rows = table.querySelectorAll('tr');
         
         if (rows.length === 0) {
-            showNotification('❌ Không có dữ liệu để xuất', 'error');
+            showNotification('Không có dữ liệu để xuất', 'error');
             return;
         }
         
@@ -457,10 +456,10 @@ function exportHistoryAsCSV() {
         link.download = `violation_history_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
         
-        showNotification('✅ Xuất CSV thành công', 'success');
+        showNotification('Xuất CSV thành công', 'success');
     } catch (error) {
         console.error('Error exporting CSV:', error);
-        showNotification('❌ Lỗi xuất CSV', 'error');
+        showNotification('Lỗi xuất CSV', 'error');
     }
 }
 
