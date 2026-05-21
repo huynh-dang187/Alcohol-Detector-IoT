@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Hệ Thống Giám Sát Nồng Độ Cồn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">🍷</span>
+                    <h1 class="text-xl font-bold text-white">CSGT Cồn</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Đăng nhập:</p>
+                        <p class="text-white font-semibold" id="user-fullname">-</p>
+                    </div>
+                    
+                    <a href="#" id="btn-stats" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition hidden">
+                        📊 Thống Kê
+                    </a>
+                    
+                    <button id="btn-logout" class="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                        ↪️ Đăng Xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        
+        <!-- Status Section -->
+        <div class="mb-6">
+            <div id="connection-status" class="p-4 rounded-lg text-center font-semibold text-white">
+                <span class="inline-block mr-2">⏳</span>
+                <span id="status-text">Đang kết nối...</span>
+            </div>
+        </div>
+        
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left: Alcohol Display -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Real-time Alcohol Display -->
+                <div class="card-dark rounded-lg p-8 text-center border border-gray-700">
+                    <p class="text-gray-400 text-sm mb-4">NỒ NG ĐỘ CỒN HIỆN TẠI</p>
+                    
+                    <div id="display-box" class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-12 mb-6">
+                        <div class="text-6xl font-bold text-white mb-2">
+                            <span id="alcohol-value">0.00</span>
+                            <span class="text-2xl ml-2">mg/L</span>
+                        </div>
+                        <p id="status-label" class="text-white text-lg font-semibold">✓ An toàn</p>
+                    </div>
+                    
+                    <!-- Measurement Mode Selection -->
+                    <div class="flex gap-4 justify-center mb-6">
+                        <button id="btn-auto-mode" class="flex-1 px-4 py-3 rounded font-semibold text-white bg-blue-600 hover:bg-blue-700 transition" data-mode="auto">
+                            ⚡ Tự động đo
+                        </button>
+                        <button id="btn-manual-mode" class="flex-1 px-4 py-3 rounded font-semibold text-white bg-gray-600 hover:bg-gray-700 transition" data-mode="manual">
+                            ✋ Đo thủ công
+                        </button>
+                    </div>
+                    
+                    <!-- Manual Measurement Button -->
+                    <button id="btn-trigger-manual" class="w-full px-6 py-4 rounded font-bold text-white bg-red-600 hover:bg-red-700 transition hidden" style="font-size: 1.125rem;">
+                        🎯 BẤM ĐỂ BẮT ĐẦU ĐO
+                    </button>
+                </div>
+                
+                <!-- Violation Form -->
+                <div class="card-dark rounded-lg p-8 border border-gray-700">
+                    <h2 class="text-2xl font-bold text-white mb-6">📋 Ghi Nhận Vi Phạm</h2>
+                    
+                    <form id="violation-form" class="space-y-4">
+                        
+                        <!-- Row 1: Name & CCCD -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Họ và Tên *</label>
+                                <input type="text" name="name" placeholder="Nguyễn Văn A" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Số CCCD *</label>
+                                <input type="text" name="cccd" placeholder="012345678910" class="input-field" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 2: Age & Gender -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Tuổi *</label>
+                                <input type="number" name="age" placeholder="35" class="input-field" min="16" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Giới tính *</label>
+                                <select name="gender" class="input-field" required>
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 3: License Plate & Vehicle Type -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Biển Số Xe *</label>
+                                <input type="text" name="license_plate" placeholder="30A-12345" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Loại Xe *</label>
+                                <select name="vehicle_type" class="input-field" required>
+                                    <option value="">-- Chọn loại xe --</option>
+                                    <option value="car">Ô tô</option>
+                                    <option value="motor">Xe máy</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 4: Alcohol Level & GPLX Status -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Nồng Độ Cồn (mg/L) *</label>
+                                <input type="number" name="alcohol_level" placeholder="0.15" class="input-field" step="0.01" min="0" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Trạng Thái GPLX</label>
+                                <input type="text" name="gplx_status" placeholder="Ghi chú thêm" class="input-field">
+                            </div>
+                        </div>
+                        
+                        <!-- Penalty Info Display -->
+                        <div id="penalty-info" class="p-4 rounded-lg bg-gray-800 border border-gray-700 hidden">
+                            <p class="text-gray-300 text-sm mb-2">Thông tin mục phạt:</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs text-gray-400">Mức phạt</p>
+                                    <p id="penalty-level" class="text-lg font-bold text-red-500">-</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Tiền phạt</p>
+                                    <p id="penalty-fine" class="text-lg font-bold text-yellow-500">-</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Điểm trừ GPLX</p>
+                                    <p id="penalty-points" class="text-lg font-bold text-blue-500">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" class="flex-1 px-6 py-3 rounded font-bold text-white bg-green-600 hover:bg-green-700 transition">
+                                ✅ Ghi Nhận Vi Phạm
+                            </button>
+                            <button type="reset" class="flex-1 px-6 py-3 rounded font-bold text-white bg-gray-600 hover:bg-gray-700 transition">
+                                🔄 Làm Lại
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Right: Information Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Penalty Level Legend -->
+                <div class="card-dark rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">📊 Bảng Mức Phạt</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded bg-green-500"></div>
+                            <span class="text-gray-300">An toàn</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded bg-yellow-500"></div>
+                            <span class="text-gray-300">Mức 1</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded bg-orange-500"></div>
+                            <span class="text-gray-300">Mức 2</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded bg-red-500"></div>
+                            <span class="text-gray-300">Mức 3</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded bg-red-900"></div>
+                            <span class="text-gray-300">Mức 4</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Info -->
+                <div class="card-dark rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">ℹ️ Thông Tin Hệ Thống</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="text-gray-400">Cổng COM:</p>
+                            <p class="text-white font-semibold">COM2</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Tốc Độ Baud:</p>
+                            <p class="text-white font-semibold">9600 bps</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Chế Độ Đo:</p>
+                            <p class="text-white font-semibold" id="current-mode">Auto</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Cập Nhật:</p>
+                            <p class="text-white font-semibold" id="last-update">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
+        
+        <!-- HEADER -->
+        <header class="py-6 animate-slideDown">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    📊 HỆ THỐNG GIÁM SÁT NỒNG ĐỘ CỒN
+                </h1>
+                <p class="text-gray-400">IoT Realtime Alcohol Detection & Traffic Violation Recording</p>
+            </div>
+        </header>
+        
+        <!-- CONNECTION STATUS -->
+        <div class="mb-6 animate-fadeIn">
+            <div id="connection-status" class="text-center p-3 rounded-lg bg-gray-700 text-gray-100 border border-gray-600">
+                <span>Đang kết nối...</span>
+            </div>
+        </div>
+        
+        <!-- MAIN DISPLAY SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            
+            <!-- LEFT: Alcohol Level Display -->
+            <div class="lg:col-span-2 animate-fadeIn">
+                <div id="display-box" class="card bg-green-500 text-white p-12 rounded-lg text-center transition-all duration-500">
+                    <p id="status-label" class="text-xl font-semibold mb-6">✓ Hệ thống an toàn</p>
+                    <div class="large-number mb-4">
+                        <span id="alcohol-value">0.0</span>
+                    </div>
+                    <p class="text-lg">mg/L (Milligram/Liter)</p>
+                </div>
+            </div>
+            
+            <!-- RIGHT: Violation Info Panel -->
+            <div class="animate-fadeIn">
+                <div id="violation-panel" class="card bg-red-50 border-red-300 hidden">
+                    <h3 class="text-lg font-bold text-red-900 mb-4">🚨 VI PHẠM GIAO THÔNG</h3>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Mức phạt:</p>
+                        <p id="penalty-level" class="text-2xl font-bold text-red-700">Mức 1</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Tiền phạt:</p>
+                        <p id="penalty-money" class="text-xl font-bold text-red-600">6-8 triệu VNĐ</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-1">Điểm trừ:</p>
+                        <p id="penalty-points" class="text-xl font-bold text-red-600">3 điểm</p>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-red-300">
+                        <p class="text-xs text-red-900">⚠ Tước GPLX, tạm giữ phương tiện theo quy định pháp luật</p>
+                    </div>
+                </div>
+                
+                <!-- Safe Status Panel -->
+                <div id="safe-panel" class="card bg-green-50 border-green-300">
+                    <h3 class="text-lg font-bold text-green-900 mb-4">✓ TRẠNG THÁI AN TOÀN</h3>
+                    <p class="text-sm text-green-700">
+                        Không phát hiện vi phạm. Nồng độ cồn trong ngưỡng an toàn (&le; 0.25 mg/L).
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VIOLATION RECORDING SECTION -->
+        <div class="card animate-fadeIn mb-6">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-4">
+                📋 GHI NHẬN VI PHẠM
+            </h2>
+            
+            <!-- Notification Container -->
+            <div id="notification-container" class="mb-4"></div>
+            
+            <!-- Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                
+                <!-- Họ Tên -->
+                <div>
+                    <label class="form-label">Họ và Tên</label>
+                    <input 
+                        type="text" 
+                        id="input-ho-ten" 
+                        class="form-input" 
+                        placeholder="Nguyễn Văn A"
+                    >
+                </div>
+                
+                <!-- CCCD -->
+                <div>
+                    <label class="form-label">Số CCCD/CMT</label>
+                    <input 
+                        type="text" 
+                        id="input-cccd" 
+                        class="form-input" 
+                        placeholder="123456789"
+                    >
+                </div>
+                
+                <!-- Biển Số -->
+                <div>
+                    <label class="form-label">Biển Số Xe</label>
+                    <input 
+                        type="text" 
+                        id="input-bien-so" 
+                        class="form-input" 
+                        placeholder="30A-12345"
+                    >
+                </div>
+                
+                <!-- Loại Xe -->
+                <div>
+                    <label class="form-label">Loại Xe</label>
+                    <select id="input-loai-xe" class="form-input">
+                        <option value="oto_va_xe_tuong_tu">Ô tô và xe tương tự</option>
+                        <option value="xe_may_xe_gan_may">Xe máy/Xe gắn máy</option>
+                    </select>
+                </div>
+                
+                <!-- Ghi Chú -->
+                <div class="md:col-span-2">
+                    <label class="form-label">Ghi Chú</label>
+                    <input 
+                        type="text" 
+                        id="input-ghi-chu" 
+                        class="form-input" 
+                        placeholder="Vị trí: Đường Nguyễn Huệ, HCM"
+                    >
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-3 flex-wrap">
+                <button 
+                    id="btn-record-violation" 
+                    class="btn btn-danger flex-1"
+                >
+                    ✓ GHI NHẬN VI PHẠM
+                </button>
+                
+                <button 
+                    id="btn-view-history" 
+                    class="btn btn-primary flex-1"
+                >
+                    📊 XEM LỊCH SỬ
+                </button>
+            </div>
+        </div>
+        
+        <!-- INFO SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            
+            <!-- Info Box 1 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">CỔNG KẾT NỐI</p>
+                <p class="text-2xl font-bold text-blue-400">COM2</p>
+            </div>
+            
+            <!-- Info Box 2 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">TỐC ĐỘ BAUD</p>
+                <p class="text-2xl font-bold text-blue-400">9600 bps</p>
+            </div>
+            
+            <!-- Info Box 3 -->
+            <div class="card text-center">
+                <p class="text-sm text-gray-400 mb-2">TẦN SUẤT CẬP NHẬT</p>
+                <p class="text-2xl font-bold text-blue-400">500 ms</p>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <footer class="text-center text-gray-500 text-sm py-6 border-t border-gray-700">
+            <p>© 2026 Hệ Thống Giám Sát Nồng Độ Cồn IoT - Bộ Công An</p>
+            <p class="mt-2 text-xs">Version 2.0 | Backend API: http://localhost:5000 | Frontend: Production Ready</p>
+        </footer>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    
+</body>
+</html>
