@@ -1,126 +1,162 @@
 """
-serial_worker.py - Thread độc lập đọc dữ liệu từ Proteus qua cổng COM
+serial_worker.py - Thread ngầm đọc dữ liệu từ cổng Serial COM
+Sử dụng threading.Lock() để đảm bảo an toàn dữ liệu
 """
 
-import serial
 import threading
+import serial
 import time
-from config import COM_PORT, BAUD_RATE, SERIAL_TIMEOUT, SERIAL_RETRY_INTERVAL, ALCOHOL_DATA_SCALE
+import os
 
-# Biến toàn cục thread-safe
+# Biến toàn cục lưu trữ giá trị cồn
 alcohol_value = 0.0
 is_connected = False
+measure_mode = 'auto'  # 'auto' hoặc 'manual'
+locked_manual_value = None
 data_lock = threading.Lock()
-serial_port = None
+
+# Cấu hình COM Port
+COM_PORT = os.getenv('COM_PORT', 'COM2')
+BAUD_RATE = 9600
+
+# Biến để tìm Peak Value khi ở chế độ Manual
+peak_value = 0.0
+collecting_peak = False
 
 
 def get_current_value():
-    """Lấy giá trị nồng độ cồn hiện tại (thread-safe)"""
+    """Lấy giá trị cồn hiện tại (an toàn với Lock)"""
     with data_lock:
-        return float(alcohol_value)
+        if measure_mode == 'manual' and locked_manual_value is not None:
+            return locked_manual_value
+        return alcohol_value
 
 
 def get_connection_status():
-    """Lấy trạng thái kết nối (thread-safe)"""
+    """Lấy trạng thái kết nối"""
     with data_lock:
         return is_connected
 
 
-def read_serial_data():
+def get_measure_mode():
+    """Lấy chế độ đo hiện tại"""
+    with data_lock:
+        return measure_mode
+
+
+def set_measure_mode(mode):
+    """Đặt chế độ đo (auto/manual)"""
+    global measure_mode
+    with data_lock:
+        measure_mode = mode
+        print(f"[SERIAL] Chế độ đo được đặt thành: {mode}")
+
+
+def trigger_manual_measurement():
     """
-    Thread chạy ngầm để đọc dữ liệu từ cổng COM
-    Cập nhật alcohol_value và is_connected một cách an toàn
+    Kích hoạt đo thủ công - lấy Peak Value cao nhất trong 2 giây
+    Return: giá trị peak được đo được
     """
-    global alcohol_value, serial_port, is_connected
+    global peak_value, locked_manual_value, collecting_peak
     
+    with data_lock:
+        peak_value = 0.0
+        collecting_peak = True
+        locked_manual_value = None
+    
+    print("[SERIAL] Đang ghi nhận Peak Value trong 2 giây...")
+    time.sleep(2)
+    
+    with data_lock:
+        collecting_peak = False
+        locked_manual_value = peak_value
+        print(f"[SERIAL] ✓ Peak Value được khóa: {locked_manual_value:.2f}")
+    
+    return locked_manual_value
+
+
+def serial_read_thread():
+    """
+    Thread ngầm đọc dữ liệu từ cổng Serial
+    Sử dụng Lock để cập nhật biến toàn cục an toàn
+    """
+    global alcohol_value, is_connected, peak_value
+    
+    serial_port = None
     retry_count = 0
-    loop_count = 0
-    
-    print(f"\n[SERIAL_WORKER] Thread đã khởi động")
+    max_retries = 5
     
     while True:
         try:
-            # Mở cổng COM với retry logic
-            while serial_port is None:
+            if serial_port is None or not serial_port.is_open:
                 try:
-                    print(f"[SERIAL_WORKER] Cố gắng kết nối {COM_PORT} (lần {retry_count + 1})...")
                     serial_port = serial.Serial(
-                        COM_PORT, 
-                        baudrate=BAUD_RATE, 
-                        timeout=SERIAL_TIMEOUT
+                        port=COM_PORT,
+                        baudrate=BAUD_RATE,
+                        timeout=1
                     )
-                    is_connected = True
-                    print(f"[SERIAL_WORKER] ✓ Kết nối {COM_PORT} THÀNH CÔNG @ {BAUD_RATE} baud")
-                    print(f"[SERIAL_WORKER] Đang đợi dữ liệu từ Proteus...")
+                    with data_lock:
+                        is_connected = True
+                    print(f"[SERIAL] ✓ Kết nối {COM_PORT} @ {BAUD_RATE} baud thành công")
                     retry_count = 0
-                    loop_count = 0
                 
-                except (serial.SerialException, PermissionError, FileNotFoundError) as e:
+                except serial.SerialException as e:
+                    with data_lock:
+                        is_connected = False
                     retry_count += 1
-                    print(f"[SERIAL_WORKER] ✗ Lỗi kết nối {COM_PORT}: {e}")
-                    print(f"[SERIAL_WORKER] Sẽ thử lại sau {SERIAL_RETRY_INTERVAL}s...")
-                    is_connected = False
-                    time.sleep(SERIAL_RETRY_INTERVAL)
+                    if retry_count <= max_retries:
+                        print(f"[SERIAL] ✗ Không kết nối được {COM_PORT}. Thử lại trong 3 giây... ({retry_count}/{max_retries})")
+                        time.sleep(3)
+                    else:
+                        print(f"[SERIAL] ✗ Vượt quá số lần thử. Chờ 5 giây...")
+                        time.sleep(5)
+                        retry_count = 0
+                    continue
             
-            # Đọc dữ liệu từ serial port
-            while serial_port is not None:
+            # Đọc dữ liệu từ Serial
+            if serial_port.in_waiting > 0:
                 try:
-                    loop_count += 1
+                    line = serial_port.readline().decode('utf-8').strip()
                     
-                    # In log mỗi 50 vòng (~ 5 giây)
-                    if loop_count % 50 == 0:
-                        in_waiting = serial_port.in_waiting if serial_port else 0
-                        print(f"[SERIAL_WORKER] Loop #{loop_count} - Bytes chờ: {in_waiting}, Giá trị: {alcohol_value:.1f}")
-                    
-                    # Kiểm tra nếu có dữ liệu trong buffer
-                    if serial_port.in_waiting > 0:
-                        raw_data = serial_port.readline().decode('utf-8').strip()
-                        print(f"[SERIAL_WORKER] Nhận dữ liệu thô: {raw_data}")
-                        
-                        if raw_data:
-                            try:
-                                # Ép kiểu an toàn
-                                raw_value = float(raw_data)
-                                # Convert từ thang 0-900 → 0-1 mg/L
-                                converted_value = raw_value / ALCOHOL_DATA_SCALE
-                                with data_lock:
-                                    alcohol_value = converted_value
-                                print(f"[SERIAL_WORKER] ✓ Cập nhật: {raw_value:.1f} → {alcohol_value:.2f} mg/L")
-                            
-                            except ValueError as e:
-                                print(f"[SERIAL_WORKER] ⚠ Lỗi ép kiểu '{raw_data}': {e}")
-                    
-                    time.sleep(0.1)
-                
-                except (serial.SerialException, OSError) as e:
-                    print(f"[SERIAL_WORKER] ✗ Lỗi đọc serial: {e}")
-                    if serial_port is not None:
+                    if line:
                         try:
-                            serial_port.close()
-                        except:
-                            pass
-                        serial_port = None
-                    is_connected = False
-                    loop_count = 0
-                    time.sleep(1)
-                    print(f"[SERIAL_WORKER] Đang thử kết nối lại...")
-                    break
+                            value = float(line)
+                            
+                            # Cập nhật giá trị toàn cục với Lock
+                            with data_lock:
+                                alcohol_value = value
+                                
+                                # Nếu đang thu thập Peak Value, lưu giá trị cao nhất
+                                if collecting_peak and value > peak_value:
+                                    peak_value = value
+                            
+                            print(f"[SERIAL] Alcohol: {value:.2f} mg/L | Mode: {measure_mode} | Peak: {peak_value:.2f}")
+                        
+                        except ValueError:
+                            print(f"[SERIAL] ! Dữ liệu không hợp lệ: {line}")
+                
+                except UnicodeDecodeError:
+                    print("[SERIAL] ! Lỗi decode dữ liệu")
+            
+            # Giữ thread chạy nhẹ nhàng
+            time.sleep(0.05)
         
         except Exception as e:
-            print(f"[SERIAL_WORKER] ✗ Lỗi không mong muốn: {e}")
-            if serial_port is not None:
+            print(f"[SERIAL] ✗ Lỗi trong thread: {e}")
+            if serial_port:
                 try:
                     serial_port.close()
                 except:
                     pass
-                serial_port = None
-            is_connected = False
-            loop_count = 0
-            time.sleep(SERIAL_RETRY_INTERVAL)
+            serial_port = None
+            with data_lock:
+                is_connected = False
+            time.sleep(2)
 
 
 def start_serial_worker():
-    """Khởi động thread đọc serial"""
-    serial_thread = threading.Thread(target=read_serial_data, daemon=True)
-    serial_thread.start()
-    return serial_thread
+    """Khởi động thread đọc Serial"""
+    thread = threading.Thread(target=serial_read_thread, daemon=True)
+    thread.start()
+    print("[SERIAL] ✓ Thread Serial Worker đã khởi động")
+    return thread

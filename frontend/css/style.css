@@ -1,15 +1,18 @@
 /**
- * css/style.css - Tùy chỉnh giao diện bổ sung
+ * style.css - Dark Mode Styling
+ * Giao diện tối cho hệ thống đo cồn
  */
 
 :root {
-    --color-safe: #10b981;
-    --color-level-1: #f59e0b;
-    --color-level-2: #ef4444;
-    --color-level-3: #7f1d1d;
     --color-primary: #3b82f6;
-    --color-dark: #1f2937;
-    --color-light: #f3f4f6;
+    --color-primary-dark: #1e40af;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-dark: #111827;
+    --color-dark-alt: #1f2937;
+    --color-gray: #6b7280;
+    --color-gray-light: #d1d5db;
 }
 
 * {
@@ -19,10 +22,72 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    color: #d1d5db;
     min-height: 100vh;
-    color: #f3f4f6;
+}
+
+/* ============ CARD STYLES ============ */
+
+.card-dark {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.card-dark:hover {
+    border-color: #4b5563;
+    transition: all 0.3s ease;
+}
+
+/* ============ INPUT FIELDS ============ */
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    background: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: #475569;
+}
+
+.input-field::placeholder {
+    color: #9ca3af;
+}
+
+/* ============ SELECT ============ */
+
+select.input-field {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d1d5db' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+}
+
+/* ============ BUTTONS ============ */
+
+button, input[type="button"], input[type="submit"] {
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ============ ANIMATIONS ============ */
@@ -41,7 +106,7 @@ body {
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
@@ -49,7 +114,7 @@ body {
     }
 }
 
-@keyframes pulse-slow {
+@keyframes pulse {
     0%, 100% {
         opacity: 1;
     }
@@ -58,236 +123,105 @@ body {
     }
 }
 
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-5px);
-    }
-    75% {
-        transform: translateX(5px);
-    }
-}
-
-@keyframes glow {
-    0%, 100% {
-        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
-    }
-    50% {
-        box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
-    }
-}
-
 .animate-fadeIn {
     animation: fadeIn 0.5s ease-in-out;
 }
 
 .animate-slideDown {
-    animation: slideDown 0.3s ease-out;
+    animation: slideDown 0.5s ease-in-out;
 }
 
-.animate-pulse-slow {
-    animation: pulse-slow 2s infinite;
-}
-
-.animate-shake {
-    animation: shake 0.5s infinite;
-}
-
-.animate-glow {
-    animation: glow 2s infinite;
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* ============ UTILITY CLASSES ============ */
 
-.glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.text-center {
+    text-align: center;
 }
 
-.card {
-    background: #1e293b;
-    border-radius: 16px;
-    border: 1px solid #334155;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+.grid {
+    display: grid;
 }
 
-.card:hover {
-    border-color: #64748b;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
+.flex {
+    display: flex;
 }
 
-.btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.gap-4 {
+    gap: 1rem;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+.gap-6 {
+    gap: 1.5rem;
 }
 
-.btn-primary {
-    background-color: var(--color-primary);
-    color: white;
+.items-center {
+    align-items: center;
 }
 
-.btn-primary:hover {
-    background-color: #2563eb;
+.justify-between {
+    justify-content: space-between;
 }
 
-.btn-success {
-    background-color: var(--color-safe);
-    color: white;
+.justify-center {
+    justify-content: center;
 }
 
-.btn-success:hover {
-    background-color: #059669;
+.rounded-lg {
+    border-radius: 0.5rem;
 }
 
-.btn-danger {
-    background-color: var(--color-level-2);
-    color: white;
+.p-4 {
+    padding: 1rem;
 }
 
-.btn-danger:hover {
-    background-color: #dc2626;
+.p-6 {
+    padding: 1.5rem;
 }
 
-.form-input {
-    width: 100%;
-    padding: 12px;
-    background-color: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: #f3f4f6;
-    font-size: 14px;
-    transition: all 0.3s ease;
+.p-8 {
+    padding: 2rem;
 }
 
-.form-input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.mb-2 {
+    margin-bottom: 0.5rem;
 }
 
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    font-size: 13px;
-    color: #cbd5e1;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.mb-4 {
+    margin-bottom: 1rem;
 }
 
-/* ============ STATUS BADGE ============ */
-
-.badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
+.mb-6 {
+    margin-bottom: 1.5rem;
 }
 
-.badge-safe {
-    background-color: rgba(16, 185, 129, 0.2);
-    color: #a7f3d0;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.badge-level-1 {
-    background-color: rgba(245, 158, 11, 0.2);
-    color: #fcd34d;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.badge-level-2 {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.badge-level-3 {
-    background-color: rgba(127, 29, 29, 0.3);
-    color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.5);
-}
-
-/* ============ DISPLAY NUMBER ============ */
-
-.large-number {
-    font-size: 120px;
-    font-weight: 900;
-    line-height: 1;
-    font-family: 'Impact', 'Arial Black', sans-serif;
-}
-
-.danger-indicator {
-    position: relative;
-    display: inline-block;
-}
-
-.danger-indicator::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 16px;
-    opacity: 0;
-    animation: glow 2s infinite;
+.hidden {
+    display: none !important;
 }
 
 /* ============ RESPONSIVE ============ */
 
 @media (max-width: 768px) {
-    .large-number {
-        font-size: 80px;
+    .grid-cols-1 {
+        grid-template-columns: 1fr;
     }
     
-    .card {
-        padding: 16px;
+    .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    .btn {
-        width: 100%;
+    .lg\:col-span-2 {
+        grid-column: auto;
+    }
+    
+    .lg\:col-span-3 {
+        grid-column: auto;
     }
 }
 
-@media (max-width: 480px) {
-    .large-number {
-        font-size: 60px;
-    }
-    
-    .card {
-        padding: 12px;
-        border-radius: 12px;
-    }
-    
-    .form-input {
-        padding: 10px;
-    }
-}
-
-/* ============ SCROLL BEHAVIOR ============ */
-
-html {
-    scroll-behavior: smooth;
-}
+/* ============ SCROLLBAR ============ */
 
 ::-webkit-scrollbar {
     width: 8px;
@@ -299,23 +233,131 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #64748b;
+    background: #4b5563;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #6b7280;
+}
+
+/* ============ TEXT SELECTION ============ */
+
+::selection {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* ============ FORM LABELS ============ */
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #d1d5db;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* ============ ERROR & SUCCESS STATES ============ */
+
+.text-error {
+    color: #ef4444;
+}
+
+.text-success {
+    color: #10b981;
+}
+
+.bg-error {
+    background-color: #7f1d1d;
+    border-color: #991b1b;
+}
+
+.bg-success {
+    background-color: #064e3b;
+    border-color: #047857;
+}
+
+/* ============ NOTIFICATION BADGES ============ */
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.badge-danger {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+.badge-warning {
+    background: var(--color-warning);
+    color: #fff;
+}
+
+/* ============ TABLE STYLES ============ */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th {
+    background: #374151;
+    color: #d1d5db;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #374151;
+}
+
+tr:hover {
+    background: #2d3748;
 }
 
 /* ============ PRINT STYLES ============ */
 
 @media print {
     body {
-        background: white;
-        color: #1f2937;
+        background: #fff;
+    }
+    
+    .card-dark {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        color: #000;
     }
     
     .no-print {
-        display: none !important;
+        display: none;
     }
+}
+
+/* ============ ACCESSIBILITY ============ */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============ DARK MODE (already default) ============ */
+
+html {
+    color-scheme: dark;
 }

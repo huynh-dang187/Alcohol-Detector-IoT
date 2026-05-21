@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê - Hệ Thống Giám Sát Nồng Độ Cồn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">🍷</span>
+                    <h1 class="text-xl font-bold text-white">CSGT Cồn - Báo Cáo</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Đăng nhập:</p>
+                        <p class="text-white font-semibold" id="user-fullname">-</p>
+                    </div>
+                    
+                    <a href="index.html" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                        ↩️ Dashboard
+                    </a>
+                    
+                    <button id="btn-logout" class="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                        ↪️ Đăng Xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            
+            <!-- Total Fine Card -->
+            <div class="card-dark rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-2">Tổng Tiền Phạt</p>
+                        <p class="text-3xl font-bold text-yellow-500" id="total-fine">0₫</p>
+                    </div>
+                    <div class="text-5xl opacity-20">💰</div>
+                </div>
+            </div>
+            
+            <!-- Total Cases Card -->
+            <div class="card-dark rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-2">Tổng Ca Vi Phạm</p>
+                        <p class="text-3xl font-bold text-blue-500" id="total-cases">0</p>
+                    </div>
+                    <div class="text-5xl opacity-20">📋</div>
+                </div>
+            </div>
+            
+            <!-- Total Points Card -->
+            <div class="card-dark rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-2">Tổng Điểm Trừ GPLX</p>
+                        <p class="text-3xl font-bold text-red-500" id="total-points">0</p>
+                    </div>
+                    <div class="text-5xl opacity-20">⚠️</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Pie Chart: Gender Distribution -->
+            <div class="card-dark rounded-lg p-6 border border-gray-700">
+                <h3 class="text-xl font-bold text-white mb-6">👥 Vi Phạm Theo Giới Tính</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="gender-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Bar Chart: Vehicle Type Distribution -->
+            <div class="card-dark rounded-lg p-6 border border-gray-700">
+                <h3 class="text-xl font-bold text-white mb-6">🚗 Vi Phạm Theo Loại Xe</h3>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="vehicle-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Refresh Button -->
+        <div class="flex justify-center mt-6">
+            <button id="btn-refresh" class="px-6 py-3 rounded font-bold text-white bg-blue-600 hover:bg-blue-700 transition">
+                🔄 Làm Tươi
+            </button>
+        </div>
+    </div>
+    
+    <script src="js/charts.js"></script>
+</body>
+</html>
