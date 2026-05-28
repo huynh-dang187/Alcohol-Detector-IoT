@@ -5,6 +5,13 @@
 
 // ============ KHỞI TẠO ============
 
+// Format alcohol display consistently as 2 decimals, showing "0.00" for zero/invalid
+function formatAlcohol(value) {
+    const n = Number(value);
+    if (!isFinite(n)) return '0.00';
+    return n.toFixed(2);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const userRole = localStorage.getItem('user_role');
     const userFullname = localStorage.getItem('user_fullname');
@@ -117,11 +124,27 @@ async function updateAlcoholDisplay() {
         const response = await fetch(`${API_URL}/alcohol`);
         const data = await response.json();
         
-        currentAlcoholLevel = data.alcohol_level;
+        // Server may return raw or converted. If returned value looks like a raw (e.g., >5),
+        // assume it's raw (0-1023) and divide by 1000. Otherwise treat as mg/L already.
+        let reported = Number(data.alcohol_level);
+        let converted = reported;
+        if (isFinite(reported) && reported > 5) {
+            converted = reported / 1000.0;
+        }
+
+        // Apply rule A: if not connected OR converted < 0.02 => display 0.00
+        let displayValue = 0.0;
+        if (data.connected && isFinite(converted) && converted >= 0.02) {
+            displayValue = Number(converted.toFixed(2));
+        } else {
+            displayValue = 0.0;
+        }
+
+        currentAlcoholLevel = displayValue;
         currentMeasureMode = data.measure_mode;
-        
+
         // Cập nhật hiển thị nồng độ cồn
-        document.getElementById('alcohol-value').textContent = currentAlcoholLevel.toFixed(2);
+        document.getElementById('alcohol-value').textContent = formatAlcohol(currentAlcoholLevel);
         
         // Cập nhật thời gian cập nhật
         // Cập nhật thời gian cập nhật (ĐÃ SỬA LỖI MÚI GIỜ)
@@ -167,30 +190,20 @@ function updateDisplayBox(alcoholLevel) {
     // Kiểm tra loại xe (mặc định car)
     const vehicleType = document.querySelector('select[name="vehicle_type"]').value || 'car';
     
-    if (vehicleType === 'car') {
-        if (alcoholLevel <= 0.04) {
-            level = 'An toàn'; color = 'green'; message = '✓ Không vi phạm';
-        } else if (alcoholLevel <= 0.08) {
-            level = 'Mức 1'; color = 'yellow'; message = '⚠️ Mức phạt 1';
-        } else if (alcoholLevel <= 0.15) {
-            level = 'Mức 2'; color = 'orange'; message = '⚠️ Mức phạt 2';
-        } else if (alcoholLevel <= 0.25) {
-            level = 'Mức 3'; color = 'red'; message = '🚨 Mức phạt 3';
-        } else {
-            level = 'Mức 4'; color = 'darkred'; message = '🚨 Mức phạt 4';
-        }
+    // Apply strict business rules:
+    // noise filter: alcohol < 0.02 => safe
+    // for both car and motor:
+    //   >0.02 && <=0.25 => Mức 1
+    //   >0.25 && <=0.40 => Mức 2
+    //   >0.40 => Mức 3 (kịch khung)
+    if (alcoholLevel < 0.02) {
+        level = 'An toàn'; color = 'green'; message = '✓ Không vi phạm';
+    } else if (alcoholLevel <= 0.25) {
+        level = 'Mức 1'; color = 'yellow'; message = '⚠️ Mức phạt 1';
+    } else if (alcoholLevel <= 0.40) {
+        level = 'Mức 2'; color = 'orange'; message = '⚠️ Mức phạt 2';
     } else {
-        if (alcoholLevel <= 0.03) {
-            level = 'An toàn'; color = 'green'; message = '✓ Không vi phạm';
-        } else if (alcoholLevel <= 0.05) {
-            level = 'Mức 1'; color = 'yellow'; message = '⚠️ Mức phạt 1';
-        } else if (alcoholLevel <= 0.08) {
-            level = 'Mức 2'; color = 'orange'; message = '⚠️ Mức phạt 2';
-        } else if (alcoholLevel <= 0.15) {
-            level = 'Mức 3'; color = 'red'; message = '🚨 Mức phạt 3';
-        } else {
-            level = 'Mức 4'; color = 'darkred'; message = '🚨 Mức phạt 4';
-        }
+        level = 'Mức 3 (Kịch khung)'; color = 'red'; message = '🚨 Mức phạt nặng (Kịch khung)';
     }
     
     const colorMap = {
@@ -261,13 +274,17 @@ async function triggerManualMeasurement() {
         const data = await response.json();
         
         if (data.status === 'success') {
-            const peakValue = data.peak_value;
+            let peakReported = Number(data.peak_value);
+            let peakConverted = peakReported;
+            if (isFinite(peakReported) && peakReported > 5) peakConverted = peakReported / 1000.0;
+            let peakDisplay = (data.connected && isFinite(peakConverted) && peakConverted >= 0.02) ? Number(peakConverted.toFixed(2)) : 0.0;
+
             const alcoholInput = document.querySelector('input[name="alcohol_level"]');
             if (alcoholInput) {
-                alcoholInput.value = peakValue.toFixed(2);
+                alcoholInput.value = formatAlcohol(peakDisplay);
                 alcoholInput.dispatchEvent(new Event('input'));
             }
-            showNotification(`✅ Đo thủ công: ${peakValue.toFixed(2)} mg/L`, 'success');
+            showNotification(`✅ Đo thủ công: ${formatAlcohol(peakDisplay)} mg/L`, 'success');
         }
     } catch (error) {
         console.error('Error triggering manual measurement:', error);
@@ -291,37 +308,21 @@ function calculatePenalty() {
     }
     
     let penalty;
-    
-    if (vehicleType === 'car') {
-        if (alcoholLevel <= 0.04) {
-            penalty = { level: 'An toàn', fine: '0đ', points: 0 };
-        } else if (alcoholLevel <= 0.08) {
-            penalty = { level: 'Mức 1', fine: '2.000.000đ', points: 2 };
-        } else if (alcoholLevel <= 0.15) {
-            penalty = { level: 'Mức 2', fine: '4.000.000đ', points: 4 };
-        } else if (alcoholLevel <= 0.25) {
-            penalty = { level: 'Mức 3', fine: '8.000.000đ', points: 6 };
-        } else {
-            penalty = { level: 'Mức 4', fine: '16.000.000đ', points: 10 };
-        }
+    // Use same strict thresholds as backend (frontend only for preview):
+    if (alcoholLevel < 0.02) {
+        penalty = { level: 'An toàn', fine: '0đ', points: 0 };
+    } else if (alcoholLevel <= 0.25) {
+        penalty = { level: 'Mức 1', fine: '—', points: '—' };
+    } else if (alcoholLevel <= 0.40) {
+        penalty = { level: 'Mức 2', fine: '—', points: '—' };
     } else {
-        if (alcoholLevel <= 0.03) {
-            penalty = { level: 'An toàn', fine: '0đ', points: 0 };
-        } else if (alcoholLevel <= 0.05) {
-            penalty = { level: 'Mức 1', fine: '500.000đ', points: 2 };
-        } else if (alcoholLevel <= 0.08) {
-            penalty = { level: 'Mức 2', fine: '1.000.000đ', points: 4 };
-        } else if (alcoholLevel <= 0.15) {
-            penalty = { level: 'Mức 3', fine: '2.500.000đ', points: 6 };
-        } else {
-            penalty = { level: 'Mức 4', fine: '5.000.000đ', points: 10 };
-        }
+        penalty = { level: 'Mức 3 (Kịch khung)', fine: '—', points: '—' };
     }
-    
+
     document.getElementById('penalty-level').textContent = penalty.level;
     document.getElementById('penalty-fine').textContent = penalty.fine;
-    document.getElementById('penalty-points').textContent = penalty.points + ' điểm';
-    
+    document.getElementById('penalty-points').textContent = (penalty.points === 0) ? '0 điểm' : (penalty.points === '—' ? '—' : penalty.points + ' điểm');
+
     if (penalty.level !== 'An toàn') {
         penaltyInfo.classList.remove('hidden');
     } else {
@@ -427,7 +428,7 @@ const createdAt = localDate.toLocaleString('vi-VN');
                 <td class="px-4 py-3">${v.cccd}</td>
                 <td class="px-4 py-3 font-semibold text-blue-400">${v.license_plate}</td>
                 <td class="px-4 py-3">${vehicleType}</td>
-                <td class="px-4 py-3 font-semibold">${v.alcohol_level.toFixed(2)}</td>
+                <td class="px-4 py-3 font-semibold">${formatAlcohol(v.alcohol_level)}</td>
                 <td class="px-4 py-3 text-yellow-500 font-semibold">${v.fine_amount}</td>
                 <td class="px-4 py-3 text-red-400">${v.points_deducted}</td>
                 <td class="px-4 py-3 text-gray-400">${createdAt}</td>

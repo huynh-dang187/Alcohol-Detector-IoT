@@ -195,8 +195,8 @@ def get_penalty_info(alcohol_level, loai_xe='oto_va_xe_tuong_tu'):
     if loai_xe not in VI_PHAM_NONG_DO_CON:
         loai_xe = 'oto_va_xe_tuong_tu'
     
-    # An toàn - không phát hiện hoặc < 0.01 mg/L
-    if alcohol_level < 0.01:
+    # An toàn - không phát hiện hoặc < 0.02 mg/L (noise filter)
+    if alcohol_level < 0.02:
         return {
             'level': 'safe',
             'name': 'An toàn',

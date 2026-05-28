@@ -17,6 +17,7 @@ from serial_worker import (
     start_serial_worker, get_current_value, get_connection_status,
     get_measure_mode, set_measure_mode, trigger_manual_measurement
 )
+from config import get_penalty_info
 
 # ============ KHỞI TẠO FLASK ============
 app = Flask(__name__, 
@@ -29,35 +30,30 @@ app.config['JSON_AS_ASCII'] = False
 # ============ CẤU HÌNH CORS ============
 CORS(app)
 
-# ============ HÀNG SỐ TÍNH TOÁN MỤC PHạT ============
-PENALTY_LIMITS = {
-    'car': [  # Ô tô và xe tương tự
-        {'max': 0.04, 'level': 'An toàn', 'fine': 0, 'points': 0, 'color': '#4CAF50'},
-        {'max': 0.08, 'level': 'Mức 1', 'fine': '2.000.000đ', 'points': 2, 'color': '#FFC107'},
-        {'max': 0.15, 'level': 'Mức 2', 'fine': '4.000.000đ', 'points': 4, 'color': '#FF9800'},
-        {'max': 0.25, 'level': 'Mức 3', 'fine': '8.000.000đ', 'points': 6, 'color': '#F44336'},
-        {'max': float('inf'), 'level': 'Mức 4', 'fine': '16.000.000đ', 'points': 10, 'color': '#8B0000'}
-    ],
-    'motor': [  # Xe máy, xe gắn máy
-        {'max': 0.03, 'level': 'An toàn', 'fine': 0, 'points': 0, 'color': '#4CAF50'},
-        {'max': 0.05, 'level': 'Mức 1', 'fine': '500.000đ', 'points': 2, 'color': '#FFC107'},
-        {'max': 0.08, 'level': 'Mức 2', 'fine': '1.000.000đ', 'points': 4, 'color': '#FF9800'},
-        {'max': 0.15, 'level': 'Mức 3', 'fine': '2.500.000đ', 'points': 6, 'color': '#F44336'},
-        {'max': float('inf'), 'level': 'Mức 4', 'fine': '5.000.000đ', 'points': 10, 'color': '#8B0000'}
-    ]
-}
-
-
 def get_penalty_by_level(alcohol_level, vehicle_type='car'):
-    """Tính toán mục phạt dựa trên nồng độ cồn và loại xe"""
-    vehicle_type = vehicle_type if vehicle_type in PENALTY_LIMITS else 'car'
-    limits = PENALTY_LIMITS[vehicle_type]
-    
-    for limit in limits:
-        if alcohol_level <= limit['max']:
-            return limit
-    
-    return limits[-1]
+    """Server-side authoritative penalty calculation using config.get_penalty_info.
+
+    Maps frontend vehicle type ('car'|'motor') to config keys and returns
+    a simplified penalty dict compatible with the rest of the app.
+    """
+    # Map frontend vehicle_type to config keys
+    mapping = {
+        'car': 'oto_va_xe_tuong_tu',
+        'motor': 'xe_may_xe_gan_may'
+    }
+    config_key = mapping.get(vehicle_type, 'oto_va_xe_tuong_tu')
+
+    info = get_penalty_info(alcohol_level, loai_xe=config_key)
+
+    # Normalize to the old return shape (fine, points, level)
+    return {
+        'max': None,
+        'level': info.get('level'),
+        'fine': info.get('fine'),
+        'points': info.get('penalty_points'),
+        'color': info.get('color'),
+        'fine_text': info.get('fine_text') if info.get('fine_text') else info.get('penalty_description')
+    }
 
 
 # ============ API ENDPOINTS ============
@@ -125,14 +121,26 @@ def api_get_alcohol():
     }
     """
     try:
-        alcohol_level = get_current_value()
+        raw_value = get_current_value()
         is_connected = get_connection_status()
         mode = get_measure_mode()
-        
-        print(f"[API] GET /api/alcohol → {alcohol_level:.2f} mg/L (Mode: {mode})")
-        
+
+        # Convert raw value (0-1023) to mg/L by dividing by 1000.0
+        try:
+            converted = float(raw_value) / 1000.0
+        except Exception:
+            converted = 0.0
+
+        # Apply rule A: if not connected OR converted < 0.02 => show 0.00
+        if (not is_connected) or (converted < 0.02):
+            display_value = 0.0
+        else:
+            display_value = round(converted, 2)
+
+        print(f"[API] GET /api/alcohol → raw={raw_value} converted={converted:.4f} display={display_value:.2f} mg/L (Mode: {mode}) connected={is_connected}")
+
         return jsonify({
-            'alcohol_level': round(alcohol_level, 2),
+            'alcohol_level': round(display_value, 2),
             'connected': is_connected,
             'measure_mode': mode,
             'timestamp': datetime.now().isoformat()
@@ -157,13 +165,25 @@ def api_trigger_manual():
     }
     """
     try:
-        peak_value = trigger_manual_measurement()
-        
-        print(f"[API] ✓ Đo thủ công hoàn tất: {peak_value:.2f} mg/L")
-        
+        peak_raw = trigger_manual_measurement()
+
+        # Convert peak raw to mg/L
+        try:
+            peak_converted = float(peak_raw) / 1000.0
+        except Exception:
+            peak_converted = 0.0
+
+        # If not connected or below noise threshold, return 0.00
+        if (not get_connection_status()) or (peak_converted < 0.02):
+            peak_display = 0.0
+        else:
+            peak_display = round(peak_converted, 2)
+
+        print(f"[API] ✓ Đo thủ công hoàn tất: raw={peak_raw} converted={peak_converted:.4f} display={peak_display:.2f} mg/L")
+
         return jsonify({
             'status': 'success',
-            'peak_value': round(peak_value, 2),
+            'peak_value': round(peak_display, 2),
             'timestamp': datetime.now().isoformat()
         }), 200
     

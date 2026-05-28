@@ -5,6 +5,13 @@
 
 // ============ KHỞI TẠO ============
 
+// Ensure consistent formatting for alcohol values: show 2 decimals and '0.00' for zero/invalid
+function formatAlcohol(value) {
+    const n = Number(value);
+    if (!isFinite(n)) return '0.00';
+    return n.toFixed(2);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const userRole = localStorage.getItem('user_role');
     const userFullname = localStorage.getItem('user_fullname');
@@ -117,11 +124,24 @@ async function updateAlcoholDisplay() {
         const response = await fetch(`${API_URL}/alcohol`);
         const data = await response.json();
         
-        currentAlcoholLevel = data.alcohol_level;
+        let reported = Number(data.alcohol_level);
+        let converted = reported;
+        if (isFinite(reported) && reported > 5) {
+            converted = reported / 1000.0;
+        }
+
+        let displayValue = 0.0;
+        if (data.connected && isFinite(converted) && converted >= 0.02) {
+            displayValue = Number(converted.toFixed(2));
+        } else {
+            displayValue = 0.0;
+        }
+
+        currentAlcoholLevel = displayValue;
         currentMeasureMode = data.measure_mode;
-        
+
         // Cập nhật hiển thị nồng độ cồn
-        document.getElementById('alcohol-value').textContent = currentAlcoholLevel.toFixed(2);
+        document.getElementById('alcohol-value').textContent = formatAlcohol(currentAlcoholLevel);
         
         // Cập nhật thời gian cập nhật
         // Cập nhật thời gian cập nhật (ĐÃ SỬA LỖI MÚI GIỜ)
@@ -264,10 +284,10 @@ async function triggerManualMeasurement() {
             const peakValue = data.peak_value;
             const alcoholInput = document.querySelector('input[name="alcohol_level"]');
             if (alcoholInput) {
-                alcoholInput.value = peakValue.toFixed(2);
+                alcoholInput.value = formatAlcohol(peakValue);
                 alcoholInput.dispatchEvent(new Event('input'));
             }
-            showNotification(`✅ Đo thủ công: ${peakValue.toFixed(2)} mg/L`, 'success');
+            showNotification(`✅ Đo thủ công: ${formatAlcohol(peakValue)} mg/L`, 'success');
         }
     } catch (error) {
         console.error('Error triggering manual measurement:', error);
@@ -427,7 +447,7 @@ const createdAt = localDate.toLocaleString('vi-VN');
                 <td class="px-4 py-3">${v.cccd}</td>
                 <td class="px-4 py-3 font-semibold text-blue-400">${v.license_plate}</td>
                 <td class="px-4 py-3">${vehicleType}</td>
-                <td class="px-4 py-3 font-semibold">${v.alcohol_level.toFixed(2)}</td>
+                <td class="px-4 py-3 font-semibold">${(function(v){ const n=Number(v.alcohol_level); return (isFinite(n)?n.toFixed(2):'0.00'); })(v)}</td>
                 <td class="px-4 py-3 text-yellow-500 font-semibold">${v.fine_amount}</td>
                 <td class="px-4 py-3 text-red-400">${v.points_deducted}</td>
                 <td class="px-4 py-3 text-gray-400">${createdAt}</td>

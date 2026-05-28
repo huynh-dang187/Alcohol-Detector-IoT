@@ -319,7 +319,7 @@ async function renderViolationTable() {
                 <td class="px-4 py-2">${violation.ho_ten}</td>
                 <td class="px-4 py-2 font-mono text-sm">${violation.cccd}</td>
                 <td class="px-4 py-2 font-mono text-sm">${violation.bien_so}</td>
-                <td class="text-center px-4 py-2">${violation.alcohol_level.toFixed(1)}</td>
+                <td class="text-center px-4 py-2">${violation.alcohol_level.toFixed(2)}</td>
                 <td class="text-center px-4 py-2">
                     <span class="px-2 py-1 rounded-full bg-opacity-20 ${levelColor}">
                         ${violation.muc_phat}
