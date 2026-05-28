@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Hệ Thống Giám Sát Nồng Độ Cồn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
+    
+    <!-- ============ NAVBAR ============ -->
+    <nav class="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-white">CSGT</h1>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-center">
+                        <p class="text-gray-400 text-sm">Đăng nhập:</p>
+                        <p id="user-fullname" class="text-white font-semibold">-</p>
+                    </div>
+                    <button id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">Đăng Xuất</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- ============ MAIN LAYOUT (SIDEBAR + CONTENT + REALTIME) ============ -->
+    <div class="flex h-screen" style="height: calc(100vh - 73px);">
+        
+        <!-- ========== LEFT SIDEBAR ========== -->
+        <aside class="w-56 bg-gray-800 border-r border-gray-700 overflow-y-auto">
+            <div class="p-6">
+                <h2 class="text-lg font-bold text-white mb-6">MENU</h2>
+                
+                <nav class="space-y-2">
+                    <!-- Dashboard Tab -->
+                    <button class="nav-item active w-full text-left px-4 py-3 rounded-lg font-semibold transition" data-tab="dashboard">
+                        Tổng Quan
+                    </button>
+                    
+                    <!-- History Tab -->
+                    <button class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition" data-tab="history">
+                        Lịch Sử
+                    </button>
+                    
+                    <!-- Stats Tab (Admin only) -->
+                    <button id="btn-stats-tab" class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition hidden" data-tab="stats">
+                        Thống Kê
+                    </button>
+                    
+                    <!-- Analytics Tab -->
+                    <button id="btn-analytics-tab" class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition hidden" data-tab="analytics">
+                        Báo Cáo
+                    </button>
+                </nav>
+            </div>
+        </aside>
+        
+        <!-- ========== MAIN CONTENT ========== -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-6">
+                
+                <!-- Connection Status -->
+                <div class="mb-6">
+                    <div id="connection-status" class="p-4 rounded-lg text-center font-semibold text-white bg-gray-700 border border-gray-600">
+                        <span id="status-text">⏳ Đang kết nối...</span>
+                    </div>
+                </div>
+                
+                <!-- ===== DASHBOARD VIEW ===== -->
+                <div id="tab-dashboard" class="tab-content space-y-6">
+                    
+                    <!-- Ghi Nhận Vi Phạm Form -->
+                    <div class="card-dark rounded-lg p-8 border border-gray-700">
+                        <h2 class="text-2xl font-bold text-white mb-6">Ghi Nhận Vi Phạm</h2>
+                        
+                        <form id="violation-form" class="space-y-4">
+                            <!-- Row 1: Name & CCCD -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Họ và Tên *</label>
+                                    <input type="text" name="name" placeholder="Nguyễn Văn A" class="input-field" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Số CCCD *</label>
+                                    <input type="text" name="cccd" placeholder="012345678910" class="input-field" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 2: Age & Gender -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Tuổi *</label>
+                                    <input type="number" name="age" placeholder="35" class="input-field" min="16" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Giới tính *</label>
+                                    <select name="gender" class="input-field" required>
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 3: License Plate & Vehicle Type -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Biển Số Xe *</label>
+                                    <input type="text" name="license_plate" placeholder="30A-12345" class="input-field" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Loại Xe *</label>
+                                    <select name="vehicle_type" class="input-field" required>
+                                        <option value="">-- Chọn loại xe --</option>
+                                        <option value="car">Ô tô</option>
+                                        <option value="motor">Xe máy</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 4: Alcohol Level & GPLX Status -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Nồng Độ Cồn (mg/L) *</label>
+                                    <input type="number" name="alcohol_level" placeholder="0.15" class="input-field" step="0.01" min="0" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Trạng Thái GPLX</label>
+                                    <input type="text" name="gplx_status" placeholder="Ghi chú thêm" class="input-field">
+                                </div>
+                            </div>
+                            
+                            <!-- Penalty Info Display -->
+                            <div id="penalty-info" class="p-4 rounded-lg bg-gray-800 border border-gray-700 hidden">
+                                <p class="text-gray-300 text-sm mb-3 font-semibold">⚠️ Thông tin mục phạt:</p>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Mức phạt</p>
+                                        <p id="penalty-level" class="text-lg font-bold text-red-500">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Tiền phạt</p>
+                                        <p id="penalty-fine" class="text-lg font-bold text-yellow-500">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Điểm trừ GPLX</p>
+                                        <p id="penalty-points" class="text-lg font-bold text-blue-500">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Buttons -->
+                            <div class="flex gap-4 pt-4">
+                                <button type="submit" class="flex-1 px-6 py-3 rounded font-bold text-white bg-green-600 hover:bg-green-700 transition">
+                                    Ghi Nhận Vi Phạm
+                                </button>
+                                <button type="reset" class="flex-1 px-6 py-3 rounded font-bold text-white bg-gray-600 hover:bg-gray-700 transition">
+                                    Làm Lại
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- ===== HISTORY VIEW ===== -->
+                <div id="tab-history" class="tab-content hidden space-y-6">
+                    <div class="card-dark rounded-lg p-8 border border-gray-700">
+                        <h2 class="text-2xl font-bold text-white mb-6">Lịch Sử Vi Phạm</h2>
+                        
+                        <div id="history-controls" class="mb-6 flex gap-4">
+                            <button id="btn-refresh-history" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+                                Tải Lại
+                            </button>
+                            <button id="btn-export-history" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition">
+                                Xuất CSV
+                            </button>
+                        </div>
+                        
+                        <!-- Violations Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">STT</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Họ Tên</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">CCCD</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Biển Số</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Loại Xe</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Nồng Độ</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Tiền Phạt</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Điểm Trừ</th>
+                                        <th class="text-left px-4 py-3 text-gray-300 font-semibold">Ngày Ghi Nhận</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body" class="text-gray-200">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-8 text-gray-400">
+                                            ⏳ Đang tải...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- No Data Message -->
+                        <div id="history-empty" class="text-center py-8 text-gray-400 hidden">
+                            <p class="text-lg">📭 Chưa có lịch sử vi phạm nào</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ===== STATS VIEW (Admin Only) ===== -->
+                <div id="tab-stats" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="card-dark rounded-lg p-6 border border-gray-700 text-center">
+                            <p class="text-gray-400 text-sm mb-2">Tổng Tiền Phạt</p>
+                            <p id="stats-total-fine" class="text-3xl font-bold text-yellow-500">-</p>
+                        </div>
+                        <div class="card-dark rounded-lg p-6 border border-gray-700 text-center">
+                            <p class="text-gray-400 text-sm mb-2">Tổng Ca Vi Phạm</p>
+                            <p id="stats-total-cases" class="text-3xl font-bold text-blue-500">-</p>
+                        </div>
+                        <div class="card-dark rounded-lg p-6 border border-gray-700 text-center">
+                            <p class="text-gray-400 text-sm mb-2">Tổng Điểm Trừ</p>
+                            <p id="stats-total-points" class="text-3xl font-bold text-red-500">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân Bố Theo Giới Tính</h3>
+                            <canvas id="gender-chart" height="300"></canvas>
+                        </div>
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân Bố Theo Loại Xe</h3>
+                            <canvas id="vehicle-chart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ===== ANALYTICS DASHBOARD ===== -->
+                <div id="tab-analytics" class="tab-content hidden space-y-6">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-2">Thống Kê & Báo Cáo</h2>
+                        <p class="text-gray-400">Phân tích chi tiết vi phạm nồng độ cồn</p>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Chart 1: Nồng độ trung bình theo nhóm tuổi -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Nồng độ TB theo tuổi</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="age-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Phân bố mức vi phạm -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân bố mức vi phạm</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="penalty-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Phân bố theo giới tính -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân bố theo giới tính</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="gender-analytics-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 4: Xu hướng vi phạm theo thời gian -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Xu hướng theo khung giờ</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="time-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- ========== RIGHT SIDEBAR (REALTIME DISPLAY) ========== -->
+        <aside class="w-80 bg-gray-800 border-l border-gray-700 overflow-y-auto">
+            <div class="p-6 space-y-6">
+                
+                <!-- Realtime Alcohol Display -->
+                <div class="card-dark rounded-lg p-8 border border-gray-700 text-center">
+                    <p class="text-gray-400 text-sm mb-4 font-semibold">NỒ NG ĐỘ CỒN REALTIME</p>
+                    
+                    <div id="display-box" class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-8 mb-6">
+                        <div class="text-5xl font-bold text-white mb-2">
+                            <span id="alcohol-value">0.00</span>
+                        </div>
+                        <p class="text-white text-lg">mg/L</p>
+                        <p id="status-label" class="text-white text-sm mt-2 font-semibold">✓ An toàn</p>
+                    </div>
+                    
+                    <!-- Mode Buttons -->
+                    <div class="space-y-3">
+                        <button id="btn-auto-mode" class="w-full px-4 py-3 rounded font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                            ⚡ Tự động đo
+                        </button>
+                        <button id="btn-manual-mode" class="w-full px-4 py-3 rounded font-semibold text-white bg-gray-600 hover:bg-gray-700 transition">
+                            Đo thủ công
+                        </button>
+                        <button id="btn-trigger-manual" class="w-full px-4 py-3 rounded font-bold text-white bg-red-600 hover:bg-red-700 transition hidden">
+                            KÍCH HOẠT
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Penalty Legend -->
+                <div class="card-dark rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">Bảng Mức Phạt</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded bg-green-500"></div>
+                            <span class="text-gray-300">An toàn</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded bg-yellow-500"></div>
+                            <span class="text-gray-300">Mức 1 ⚠️</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded bg-orange-500"></div>
+                            <span class="text-gray-300">Mức 2 ⚠️</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded bg-red-500"></div>
+                            <span class="text-gray-300">Mức 3 🚨</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded bg-red-900"></div>
+                            <span class="text-gray-300">Mức 4 🚨</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Info -->
+                <div class="card-dark rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">ℹ️ Thông Tin Hệ Thống</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="text-gray-400">Cổng COM:</p>
+                            <p class="text-white font-semibold">COM2</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Tốc Độ Baud:</p>
+                            <p class="text-white font-semibold">9600 bps</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Chế Độ Đo:</p>
+                            <p id="current-mode" class="text-white font-semibold">Auto</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400">Cập Nhật:</p>
+                            <p id="last-update" class="text-white font-semibold">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/globals.js"></script>
+    <script src="/static/js/analytics.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/charts.js"></script>
+</body>
+</html>

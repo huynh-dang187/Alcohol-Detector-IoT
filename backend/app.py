@@ -3,10 +3,11 @@ app.py - Backend Flask Server với API RESTful
 Chứa tất cả các endpoint API chuẩn cho hệ thống đo cồn IoT
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_cors import CORS
 import time
 from datetime import datetime
+import os
 
 from database import (
     init_database, verify_login, save_violation, 
@@ -18,7 +19,11 @@ from serial_worker import (
 )
 
 # ============ KHỞI TẠO FLASK ============
-app = Flask(__name__)
+app = Flask(__name__, 
+    template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+    static_folder=os.path.join(os.path.dirname(__file__), 'static'),
+    static_url_path='/static'
+)
 app.config['JSON_AS_ASCII'] = False
 
 # ============ CẤU HÌNH CORS ============
@@ -439,6 +444,49 @@ def debug_routes():
         })
     return jsonify({'routes': routes}), 200
 
+
+# ============ SERVE FRONTEND FILES ============
+
+@app.route('/')
+def index():
+    """Serve trang chủ (dashboard)"""
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        print(f"[ERROR] Load index.html failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/debug-info')
+def debug_info():
+    """Debug info"""
+    return jsonify({
+        'template_folder': app.template_folder,
+        'static_folder': app.static_folder,
+        'static_url_path': app.static_url_path,
+        'root_path': app.root_path
+    }), 200
+
+
+@app.route('/login')
+def login():
+    """Serve trang đăng nhập"""
+    return render_template('login.html')
+
+
+@app.route('/stats')
+def stats():
+    """Serve trang thống kê (stats.html nếu tồn tại)"""
+    return render_template('stats.html')
+
+
+@app.route('/history')
+def history():
+    """Serve trang lịch sử (history.html nếu tồn tại)"""
+    return render_template('history.html')
+
+
+# ============ ERROR HANDLERS ============
 
 @app.errorhandler(404)
 def not_found(e):
