@@ -10,7 +10,7 @@ from datetime import datetime
 
 from database import (
     init_database, verify_login, save_violation, 
-    get_violation_stats, get_all_violations
+    get_violation_stats, get_all_violations, get_statistics, seed_mock_violations
 )
 from serial_worker import (
     start_serial_worker, get_current_value, get_connection_status,
@@ -374,6 +374,51 @@ def api_get_stats():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@app.route('/api/statistics', methods=['GET'])
+def api_get_statistics():
+    """
+    GET /api/statistics
+    Lấy dữ liệu thống kê chi tiết cho Analytics Dashboard
+    
+    Response:
+    {
+        "status": "success",
+        "by_age": [
+            {"label": "Dưới 25", "avg_alcohol": 0.12, "count": 3},
+            ...
+        ],
+        "by_penalty_level": {
+            "An toàn": 2,
+            "Mức 1": 5,
+            ...
+        },
+        "by_gender": {"Nam": 10, "Nữ": 5, "Khác": 1},
+        "by_time": {
+            "00h-06h": 2,
+            "06h-12h": 8,
+            ...
+        }
+    }
+    """
+    try:
+        stats = get_statistics()
+        
+        print(f"[API] GET /api/statistics → Lấy dữ liệu thống kê")
+        
+        return jsonify({
+            'status': 'success',
+            'by_age': stats['by_age'],
+            'by_penalty_level': stats['by_penalty_level'],
+            'by_gender': stats['by_gender'],
+            'by_time': stats['by_time'],
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    
+    except Exception as e:
+        print(f"[API] ✗ Lỗi GET /api/statistics: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -416,6 +461,10 @@ if __name__ == '__main__':
     # Khởi tạo database
     print("[MAIN] Khởi tạo database...")
     init_database()
+    
+    # Seed mock data nếu database trống
+    print("[MAIN] Kiểm tra dữ liệu seed...")
+    seed_mock_violations()
     
     # Khởi động thread đọc serial
     print("[MAIN] Khởi động thread đọc Serial (COM2 @ 9600 baud)...")

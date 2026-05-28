@@ -3,11 +3,6 @@
  * Quản lý: Tab switching, Realtime alcohol, Violation recording, History
  */
 
-const API_URL = 'http://localhost:5000/api';
-let currentMeasureMode = 'auto';
-let currentAlcoholLevel = 0;
-let genderChart, vehicleChart;
-
 // ============ KHỞI TẠO ============
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,9 +17,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hiển thị thông tin người dùng
     document.getElementById('user-fullname').textContent = userFullname || '-';
     
-    // Nếu là admin, hiển thị tab Stats
+    // Nếu là admin, hiển thị tab Stats và Analytics
     if (userRole === 'admin') {
         document.getElementById('btn-stats-tab').classList.remove('hidden');
+        document.getElementById('btn-analytics-tab').classList.remove('hidden');
     }
     
     // Setup event listeners
@@ -102,6 +98,11 @@ function switchTab(tabName) {
         loadViolationHistory();
     } else if (tabName === 'stats') {
         loadStatistics();
+    } else if (tabName === 'analytics') {
+        // Load analytics data từ analytics.js
+        if (typeof loadAnalyticsData === 'function') {
+            loadAnalyticsData();
+        }
     }
 }
 

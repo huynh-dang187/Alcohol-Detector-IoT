@@ -3,9 +3,6 @@
  * Vẽ biểu đồ Chart.js dựa trên dữ liệu từ API
  */
 
-const API_URL = 'http://localhost:5000/api';
-let genderChart, vehicleChart;
-
 // ============ KHỞI TẠO ============
 
 document.addEventListener('DOMContentLoaded', async () => {

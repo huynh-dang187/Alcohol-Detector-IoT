@@ -50,6 +50,11 @@
                     <button id="btn-stats-tab" class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition hidden" data-tab="stats">
                         Thống Kê
                     </button>
+                    
+                    <!-- Analytics Tab -->
+                    <button id="btn-analytics-tab" class="nav-item w-full text-left px-4 py-3 rounded-lg font-semibold transition hidden" data-tab="analytics">
+                        Báo Cáo
+                    </button>
                 </nav>
             </div>
         </aside>
@@ -237,6 +242,49 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- ===== ANALYTICS DASHBOARD ===== -->
+                <div id="tab-analytics" class="tab-content hidden space-y-6">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-2">Thống Kê & Báo Cáo</h2>
+                        <p class="text-gray-400">Phân tích chi tiết vi phạm nồng độ cồn</p>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Chart 1: Nồng độ trung bình theo nhóm tuổi -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Nồng độ TB theo tuổi</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="age-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Phân bố mức vi phạm -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân bố mức vi phạm</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="penalty-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Phân bố theo giới tính -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Phân bố theo giới tính</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="gender-analytics-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 4: Xu hướng vi phạm theo thời gian -->
+                        <div class="card-dark rounded-lg p-6 border border-gray-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Xu hướng theo khung giờ</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="time-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
         
@@ -324,6 +372,10 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/globals.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/charts.js"></script>
 </body>
 </html>
