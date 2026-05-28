@@ -1,0 +1,363 @@
+/**
+ * style.css - Dark Mode Styling
+ * Giao diện tối cho hệ thống đo cồn
+ */
+
+:root {
+    --color-primary: #3b82f6;
+    --color-primary-dark: #1e40af;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-dark: #111827;
+    --color-dark-alt: #1f2937;
+    --color-gray: #6b7280;
+    --color-gray-light: #d1d5db;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    color: #d1d5db;
+    min-height: 100vh;
+}
+
+/* ============ CARD STYLES ============ */
+
+.card-dark {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.card-dark:hover {
+    border-color: #4b5563;
+    transition: all 0.3s ease;
+}
+
+/* ============ INPUT FIELDS ============ */
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    background: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: #475569;
+}
+
+.input-field::placeholder {
+    color: #9ca3af;
+}
+
+/* ============ SELECT ============ */
+
+select.input-field {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d1d5db' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+}
+
+/* ============ BUTTONS ============ */
+
+button, input[type="button"], input[type="submit"] {
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============ ANIMATIONS ============ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slideDown {
+    animation: slideDown 0.5s ease-in-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============ UTILITY CLASSES ============ */
+
+.text-center {
+    text-align: center;
+}
+
+.grid {
+    display: grid;
+}
+
+.flex {
+    display: flex;
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.gap-6 {
+    gap: 1.5rem;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.p-6 {
+    padding: 1.5rem;
+}
+
+.p-8 {
+    padding: 2rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ============ RESPONSIVE ============ */
+
+@media (max-width: 768px) {
+    .grid-cols-1 {
+        grid-template-columns: 1fr;
+    }
+    
+    .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .lg\:col-span-2 {
+        grid-column: auto;
+    }
+    
+    .lg\:col-span-3 {
+        grid-column: auto;
+    }
+}
+
+/* ============ SCROLLBAR ============ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* ============ TEXT SELECTION ============ */
+
+::selection {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* ============ FORM LABELS ============ */
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #d1d5db;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* ============ ERROR & SUCCESS STATES ============ */
+
+.text-error {
+    color: #ef4444;
+}
+
+.text-success {
+    color: #10b981;
+}
+
+.bg-error {
+    background-color: #7f1d1d;
+    border-color: #991b1b;
+}
+
+.bg-success {
+    background-color: #064e3b;
+    border-color: #047857;
+}
+
+/* ============ NOTIFICATION BADGES ============ */
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.badge-danger {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+.badge-warning {
+    background: var(--color-warning);
+    color: #fff;
+}
+
+/* ============ TABLE STYLES ============ */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th {
+    background: #374151;
+    color: #d1d5db;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #374151;
+}
+
+tr:hover {
+    background: #2d3748;
+}
+
+/* ============ PRINT STYLES ============ */
+
+@media print {
+    body {
+        background: #fff;
+    }
+    
+    .card-dark {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        color: #000;
+    }
+    
+    .no-print {
+        display: none;
+    }
+}
+
+/* ============ ACCESSIBILITY ============ */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============ DARK MODE (already default) ============ */
+
+html {
+    color-scheme: dark;
+}
