@@ -5,40 +5,26 @@
 
 // ============ KHỞI TẠO ============
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // Kiểm tra quyền admin
-    const userRole = localStorage.getItem('user_role');
-    const userFullname = localStorage.getItem('user_fullname');
-    
-    if (!userRole || userRole !== 'admin') {
-        // Nếu không phải admin, redirect về dashboard
-        window.location.href = '/login';
-        return;
-    }
-    
-    // Hiển thị thông tin người dùng
-    document.getElementById('user-fullname').textContent = userFullname || '-';
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Tải dữ liệu thống kê
-    await loadStats();
-});
+// Page initialization is handled by `initChartsPage()` at the bottom.
+// This avoids running duplicate DOMContentLoaded handlers on the same page.
 
 // ============ EVENT LISTENERS ============
 
-function setupEventListeners() {
-    // Logout button
-    document.getElementById('btn-logout').addEventListener('click', () => {
-        localStorage.removeItem('user_role');
-        localStorage.removeItem('user_fullname');
-        localStorage.removeItem('user_username');
-        window.location.href = '/login';
-    });
-    
-    // Refresh button
-    document.getElementById('btn-refresh').addEventListener('click', loadStats);
+function setupStatsEventListeners() {
+    // Logout button (guarded)
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('user_fullname');
+            localStorage.removeItem('user_username');
+            window.location.href = '/login';
+        });
+    }
+
+    // Refresh button (guarded)
+    const btnRefresh = document.getElementById('btn-refresh');
+    if (btnRefresh) btnRefresh.addEventListener('click', loadStats);
 }
 
 // ============ TẢI DỮ LIỆU ============
@@ -67,13 +53,20 @@ function updateStatCards(data) {
         currency: 'VND',
         minimumFractionDigits: 0
     }).format(data.total_fine);
-    document.getElementById('total-fine').textContent = totalFine;
-    
+    // Try both ID variants used across templates
+    const elTotalFine = document.getElementById('total-fine') || document.getElementById('stats-total-fine');
+    if (elTotalFine) elTotalFine.textContent = totalFine;
+    else console.warn('[CHARTS] updateStatCards: #total-fine / #stats-total-fine not found');
+
     // Tổng ca vi phạm
-    document.getElementById('total-cases').textContent = data.total_cases;
-    
+    const elTotalCases = document.getElementById('total-cases') || document.getElementById('stats-total-cases');
+    if (elTotalCases) elTotalCases.textContent = (data.total_cases != null) ? data.total_cases : 0;
+    else console.warn('[CHARTS] updateStatCards: #total-cases / #stats-total-cases not found');
+
     // Tổng điểm trừ GPLX
-    document.getElementById('total-points').textContent = data.total_points;
+    const elTotalPoints = document.getElementById('total-points') || document.getElementById('stats-total-points');
+    if (elTotalPoints) elTotalPoints.textContent = (data.total_points != null) ? data.total_points : 0;
+    else console.warn('[CHARTS] updateStatCards: #total-points / #stats-total-points not found');
 }
 
 // ============ BIỂU ĐỒ GIỚI TÍNH ============
@@ -231,33 +224,27 @@ function updateVehicleChart(vehicleData) {
     });
 }
     
-    const totalContainer = document.getElementById('total-violations');
-    const totalFineContainer = document.getElementById('total-fine');
-    const chartContainer = document.getElementById('chart-container');
-    
-    if (totalContainer) {
-        totalContainer.textContent = stats.total_violations;
-    }
-    
-    if (totalFineContainer) {
-        totalFineContainer.textContent = formatCurrency(stats.total_fine || 0);
-    }
-    
-    if (chartContainer && stats.by_level && Object.keys(stats.by_level).length > 0) {
-        renderSimpleChart(stats.by_level, chartContainer);
-    }
-}
+// Note: stats loading is handled by `loadStats()` to keep a single source of truth.
 
 /**
  * Vẽ biểu đồ đơn giản (không dùng thư viện ngoài)
  */
 function renderSimpleChart(data, container) {
     container.innerHTML = '';
-    
-    const maxCount = Math.max(...Object.values(data).map(d => d.count || 0));
-    
+    if (!data || Object.keys(data).length === 0) {
+        container.innerHTML = '<p class="text-gray-400">Chưa có dữ liệu</p>';
+        return;
+    }
+
+    const counts = Object.values(data).map(d => d.count || 0);
+    let maxCount = counts.length ? Math.max(...counts) : 0;
+    if (!isFinite(maxCount) || maxCount <= 0) maxCount = 1;
+
     Object.entries(data).forEach(([level, stats]) => {
-        const percentage = (stats.count / maxCount) * 100;
+        const rawCount = stats.count || 0;
+        let percentage = (rawCount / maxCount) * 100;
+        if (!isFinite(percentage) || percentage < 0) percentage = 0;
+        if (percentage > 100) percentage = 100;
         
         const chartItem = document.createElement('div');
         chartItem.className = 'mb-4';
@@ -277,6 +264,24 @@ function renderSimpleChart(data, container) {
         
         container.appendChild(chartItem);
     });
+}
+
+/**
+ * Fetch recent violations from API
+ */
+async function fetchViolations(limit = 50) {
+    try {
+        const res = await fetch(`${API_URL}/violations?limit=${limit}`);
+        const json = await res.json();
+        if (!json) return [];
+        // Support multiple possible response shapes
+        if (Array.isArray(json)) return json;
+        if (json.status === 'success') return json.violations || json.data || [];
+        return json.violations || json.data || [];
+    } catch (err) {
+        console.error('[CHARTS] fetchViolations error:', err);
+        return [];
+    }
 }
 
 /**
@@ -357,13 +362,16 @@ function formatCurrency(amount) {
  */
 function initChartsPage() {
     console.log('[CHARTS] Khởi tạo page thống kê...');
-    
-    renderStatisticsChart();
+    // Setup UI event handlers specific to the stats page
+    setupStatsEventListeners();
+
+    // Load the standard stats and tables
+    loadStats();
     renderViolationTable();
-    
+
     // Cập nhật mỗi 10 giây
     setInterval(() => {
-        renderStatisticsChart();
+        loadStats();
         renderViolationTable();
     }, 10000);
     

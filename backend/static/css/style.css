@@ -361,3 +361,11 @@ tr:hover {
 html {
     color-scheme: dark;
 }
+
+/* Ensure Chart.js canvases used in stats have constrained height to avoid stretching */
+#gender-chart, #vehicle-chart, #age-chart, #penalty-chart, #gender-analytics-chart, #time-chart {
+    width: 100% !important;
+    height: 300px !important;
+    max-height: 600px !important;
+    display: block !important;
+}

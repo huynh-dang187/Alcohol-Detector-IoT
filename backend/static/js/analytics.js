@@ -25,7 +25,8 @@ async function loadAnalyticsData() {
             // Render 4 biểu đồ
             renderAgeChart(data.by_age);
             renderPenaltyChart(data.by_penalty_level);
-            renderGenderChart(data.by_gender);
+            // Thay thế biểu đồ giới tính trùng lặp bằng Top 5 offenders theo tiền phạt
+            renderTopOffenders();
             renderTimeChart(data.by_time);
             
             showNotification('✅ Dữ liệu thống kê đã tải thành công', 'success');
@@ -194,69 +195,101 @@ function renderPenaltyChart(penaltyData) {
 }
 
 // ============ CHART 3: PHÂN BỐ GIỚI TÍNH (Pie Chart) ============
+// ============ CHART 3: TOP 5 OFFENDERS BY FINE (Bar Chart) ============
 
-function renderGenderChart(genderData) {
-    const ctx = document.getElementById('gender-analytics-chart');
-    if (!ctx) return;
-    
-    const ctx2d = ctx.getContext('2d');
-    
-    // Chuẩn bị dữ liệu
-    const labels = ['Nam', 'Nữ', 'Khác'];
-    const values = labels.map(label => genderData[label] || 0);
-    
-    // Màu sắc
-    const colors = [
-        '#3b82f6', // Xanh lam - Nam
-        '#ec4899', // Hồng - Nữ
-        '#6b7280'  // Xám - Khác
-    ];
-    
-    // Destroy chart cũ nếu có
-    if (genderChart) {
-        genderChart.destroy();
-    }
-    
-    genderChart = new Chart(ctx2d, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: values,
-                backgroundColor: colors,
-                borderColor: '#111827',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#d1d5db',
-                        font: { size: 12 },
-                        padding: 15
-                    }
+async function renderTopOffenders() {
+    const canvas = document.getElementById('gender-analytics-chart');
+    if (!canvas) return;
+
+    try {
+        // Lấy danh sách vi phạm nhiều nhất (tăng limit nếu cần)
+        const res = await fetch(`${API_URL}/violations?limit=1000`);
+        const json = await res.json();
+        const violations = Array.isArray(json) ? json : (json.violations || json.data || []);
+
+        // Tổng tiền phạt theo biển số/ tên/ cccd
+        const totals = {};
+        const counts = {};
+        violations.forEach(v => {
+            const key = (v.license_plate && String(v.license_plate).trim()) || (v.bien_so && String(v.bien_so).trim()) || (v.name && String(v.name).trim()) || (v.ho_ten && String(v.ho_ten).trim()) || (v.cccd && String(v.cccd).trim()) || 'Unknown';
+
+            // Các field tiền phạt có thể là: fine_amount, tien_phat, tien, fine
+            let raw = v.fine_amount || v.tien_phat || v.tien || v.fine || v.fine_amount || '';
+            raw = String(raw || '');
+            let fine = Number(raw);
+            if (!isFinite(fine)) {
+                // Loại bỏ mọi ký tự không phải chữ số (ví dụ: '4.000.000đ' -> '4000000')
+                const digits = raw.replace(/\D+/g, '');
+                fine = Number(digits) || 0;
+            }
+
+            if (!totals[key]) totals[key] = 0;
+            totals[key] += fine;
+
+            if (!counts[key]) counts[key] = 0;
+            counts[key] += 1;
+        });
+
+        // Convert to array and sort desc
+        let sorted = Object.entries(totals).map(([k, v]) => ({ key: k, total: v })).sort((a,b)=>b.total-a.total);
+        const totalSum = sorted.reduce((s,i)=>s+i.total,0);
+
+        // Nếu tổng tiền phạt = 0 (dữ liệu chưa có giá trị tiền hợp lệ), sử dụng counts thay vì tổng tiền
+        let labels, values, datasetLabel;
+        if (totalSum <= 0) {
+            sorted = Object.entries(counts).map(([k,v])=>({key:k,count:v})).sort((a,b)=>b.count-a.count);
+            const top = sorted.slice(0,5);
+            labels = top.map(s=>s.key);
+            values = top.map(s=>s.count);
+            datasetLabel = 'Số vụ vi phạm';
+        } else {
+            const top = sorted.slice(0,5);
+            labels = top.map(s=>s.key);
+            values = top.map(s=>s.total);
+            datasetLabel = 'Tổng tiền phạt (VND)';
+        }
+
+        // Create bar chart
+        const ctx = canvas.getContext('2d');
+        const colors = ['#ef4444', '#f97316', '#f59e0b', '#3b82f6', '#6ee7b7'];
+
+        if (window.topOffendersChart) window.topOffendersChart.destroy();
+
+        window.topOffendersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tổng tiền phạt (VND)',
+                    data: values,
+                    backgroundColor: colors.slice(0, values.length),
+                    borderColor: '#111827',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#9ca3af', callback: val => new Intl.NumberFormat('vi-VN').format(val) },
+                        grid: { color: 'rgba(75,85,99,0.2)' }
+                    },
+                    x: { ticks: { color: '#d1d5db' }, grid: { display: false } }
                 },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                            return `${label}: ${value} (${percent}%)`;
-                        }
-                    }
+                plugins: {
+                    tooltip: {
+                        callbacks: { label: ctx => `${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ctx.parsed.y)}` }
+                    },
+                    legend: { display: false }
                 }
             }
-        }
-    });
+        });
+
+    } catch (err) {
+        console.error('[Analytics] renderTopOffenders error:', err);
+    }
 }
 
 // ============ CHART 4: XU HƯỚNG THEO KHUNG GIỜ (Line Chart với Gradient Fill) ============
