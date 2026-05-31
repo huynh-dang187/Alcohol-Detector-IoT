@@ -274,7 +274,15 @@
                         
                         <!-- Chart 3: Phân bố theo giới tính -->
                         <div class="card-dark rounded-lg p-6 border border-gray-700">
-                            <h3 class="text-lg font-bold text-white mb-4">Top 5 vi phạm (theo tổng tiền phạt)</h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-white">Top 5 Vi Phạm</h3>
+                                <div id="top-offenders-controls" class="flex gap-2">
+                                    <button data-mode="fine" class="px-3 py-1 rounded bg-blue-600 text-white text-sm">Theo Tiền</button>
+                                    <button data-mode="count" class="px-3 py-1 rounded bg-gray-700 text-white text-sm">Theo Số Vụ</button>
+                                    <button data-top="5" class="px-3 py-1 rounded bg-blue-600 text-white text-sm">Top 5</button>
+                                    <button data-top="10" class="px-3 py-1 rounded bg-gray-700 text-white text-sm">Top 10</button>
+                                </div>
+                            </div>
                             <div style="position: relative; height: 300px;">
                                 <canvas id="gender-analytics-chart"></canvas>
                             </div>

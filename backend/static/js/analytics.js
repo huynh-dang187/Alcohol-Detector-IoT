@@ -26,7 +26,46 @@ async function loadAnalyticsData() {
             renderAgeChart(data.by_age);
             renderPenaltyChart(data.by_penalty_level);
             // Thay thế biểu đồ giới tính trùng lặp bằng Top 5 offenders theo tiền phạt
-            renderTopOffenders();
+            await renderTopOffenders();
+            // Đảm bảo tiêu đề hiển thị đúng ngay cả khi template cũ chưa được cập nhật
+            try {
+                const canvas = document.getElementById('gender-analytics-chart');
+                if (canvas) {
+                    const card = canvas.closest('.card-dark');
+                    if (card) {
+                        const h3 = card.querySelector('h3');
+                        if (h3) h3.textContent = 'Top 5 vi phạm (theo tổng tiền phạt)';
+                    }
+                }
+            } catch (e) {
+                console.warn('[Analytics] Could not update analytics chart title', e);
+            }
+            // Ensure controls exist (in case template variant doesn't include them)
+            try {
+                const canvas = document.getElementById('gender-analytics-chart');
+                if (canvas) {
+                    const card = canvas.closest('.card-dark') || canvas.parentElement;
+                    if (card) {
+                        let ctrl = card.querySelector('#top-offenders-controls');
+                        if (!ctrl) {
+                            ctrl = document.createElement('div');
+                            ctrl.id = 'top-offenders-controls';
+                            ctrl.className = 'flex gap-2';
+                            // create buttons
+                            const bFine = document.createElement('button'); bFine.dataset.mode = 'fine'; bFine.textContent='Theo Tiền'; bFine.className='px-3 py-1 rounded bg-blue-600 text-white text-sm';
+                            const bCount = document.createElement('button'); bCount.dataset.mode='count'; bCount.textContent='Theo Số Vụ'; bCount.className='px-3 py-1 rounded bg-gray-700 text-white text-sm';
+                            const b5 = document.createElement('button'); b5.dataset.top='5'; b5.textContent='Top 5'; b5.className='px-3 py-1 rounded bg-blue-600 text-white text-sm';
+                            const b10 = document.createElement('button'); b10.dataset.top='10'; b10.textContent='Top 10'; b10.className='px-3 py-1 rounded bg-gray-700 text-white text-sm';
+                            ctrl.appendChild(bFine); ctrl.appendChild(bCount); ctrl.appendChild(b5); ctrl.appendChild(b10);
+                            // insert before canvas container
+                            const wrapper = canvas.parentElement;
+                            wrapper.parentElement.insertBefore(ctrl, wrapper);
+                            // wire events
+                            setupTopOffendersControls();
+                        }
+                    }
+                }
+            } catch (err) { console.warn('[Analytics] create controls failed', err); }
             renderTimeChart(data.by_time);
             
             showNotification('✅ Dữ liệu thống kê đã tải thành công', 'success');
@@ -197,7 +236,7 @@ function renderPenaltyChart(penaltyData) {
 // ============ CHART 3: PHÂN BỐ GIỚI TÍNH (Pie Chart) ============
 // ============ CHART 3: TOP 5 OFFENDERS BY FINE (Bar Chart) ============
 
-async function renderTopOffenders() {
+async function renderTopOffenders(mode = 'fine', topN = 5) {
     const canvas = document.getElementById('gender-analytics-chart');
     if (!canvas) return;
 
@@ -231,22 +270,29 @@ async function renderTopOffenders() {
         });
 
         // Convert to array and sort desc
-        let sorted = Object.entries(totals).map(([k, v]) => ({ key: k, total: v })).sort((a,b)=>b.total-a.total);
-        const totalSum = sorted.reduce((s,i)=>s+i.total,0);
-
-        // Nếu tổng tiền phạt = 0 (dữ liệu chưa có giá trị tiền hợp lệ), sử dụng counts thay vì tổng tiền
         let labels, values, datasetLabel;
-        if (totalSum <= 0) {
-            sorted = Object.entries(counts).map(([k,v])=>({key:k,count:v})).sort((a,b)=>b.count-a.count);
-            const top = sorted.slice(0,5);
+        if (mode === 'count') {
+            const sortedByCount = Object.entries(counts).map(([k,v])=>({key:k,count:v})).sort((a,b)=>b.count-a.count);
+            const top = sortedByCount.slice(0, topN);
             labels = top.map(s=>s.key);
             values = top.map(s=>s.count);
             datasetLabel = 'Số vụ vi phạm';
         } else {
-            const top = sorted.slice(0,5);
-            labels = top.map(s=>s.key);
-            values = top.map(s=>s.total);
-            datasetLabel = 'Tổng tiền phạt (VND)';
+            let sorted = Object.entries(totals).map(([k, v]) => ({ key: k, total: v })).sort((a,b)=>b.total-a.total);
+            const totalSum = sorted.reduce((s,i)=>s+i.total,0);
+            if (totalSum <= 0) {
+                // fallback to counts
+                const sortedByCount = Object.entries(counts).map(([k,v])=>({key:k,count:v})).sort((a,b)=>b.count-a.count);
+                const top = sortedByCount.slice(0, topN);
+                labels = top.map(s=>s.key);
+                values = top.map(s=>s.count);
+                datasetLabel = 'Số vụ vi phạm';
+            } else {
+                const top = sorted.slice(0, topN);
+                labels = top.map(s=>s.key);
+                values = top.map(s=>s.total);
+                datasetLabel = 'Tổng tiền phạt (VND)';
+            }
         }
 
         // Create bar chart
@@ -260,7 +306,7 @@ async function renderTopOffenders() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Tổng tiền phạt (VND)',
+                    label: datasetLabel,
                     data: values,
                     backgroundColor: colors.slice(0, values.length),
                     borderColor: '#111827',
@@ -280,7 +326,14 @@ async function renderTopOffenders() {
                 },
                 plugins: {
                     tooltip: {
-                        callbacks: { label: ctx => `${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ctx.parsed.y)}` }
+                        callbacks: {
+                            label: function(context) {
+                                if (datasetLabel.includes('Tiền')) {
+                                    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
+                                }
+                                return `${context.parsed.y} vụ`;
+                            }
+                        }
                     },
                     legend: { display: false }
                 }
@@ -290,6 +343,83 @@ async function renderTopOffenders() {
     } catch (err) {
         console.error('[Analytics] renderTopOffenders error:', err);
     }
+}
+
+// UI control handler
+function setupTopOffendersControls() {
+    let container = document.getElementById('top-offenders-controls');
+    if (!container) {
+        // tạo động nếu template không có
+        const canvas = document.getElementById('gender-analytics-chart');
+        if (canvas) {
+            const card = canvas.closest('.card-dark');
+            if (card) {
+                const header = card.querySelector('h3');
+                container = document.createElement('div');
+                container.id = 'top-offenders-controls';
+                container.className = 'flex gap-2';
+                // thêm vào sau header
+                if (header && header.parentElement) header.parentElement.appendChild(container);
+            }
+        }
+    }
+    if (!container) return;
+    let btn5 = container.querySelector('[data-top="5"]');
+    let btn10 = container.querySelector('[data-top="10"]');
+    // if buttons missing create them
+    if (!btn5) {
+        btn5 = document.createElement('button');
+        btn5.setAttribute('data-top','5');
+        btn5.className = 'px-3 py-1 rounded bg-blue-600 text-white text-sm';
+        btn5.textContent = 'Top 5';
+        container.appendChild(btn5);
+    }
+    if (!btn10) {
+        btn10 = document.createElement('button');
+        btn10.setAttribute('data-top','10');
+        btn10.className = 'px-3 py-1 rounded bg-gray-700 text-white text-sm';
+        btn10.textContent = 'Top 10';
+        container.appendChild(btn10);
+    }
+    let btnFine = container.querySelector('[data-mode="fine"]');
+    let btnCount = container.querySelector('[data-mode="count"]');
+    if (!btnFine) {
+        btnFine = document.createElement('button');
+        btnFine.setAttribute('data-mode','fine');
+        btnFine.className = 'px-3 py-1 rounded bg-blue-600 text-white text-sm';
+        btnFine.textContent = 'Theo Tiền';
+        container.insertBefore(btnFine, container.firstChild);
+    }
+    if (!btnCount) {
+        btnCount = document.createElement('button');
+        btnCount.setAttribute('data-mode','count');
+        btnCount.className = 'px-3 py-1 rounded bg-gray-700 text-white text-sm';
+        btnCount.textContent = 'Theo Số Vụ';
+        container.insertBefore(btnCount, container.firstChild.nextSibling);
+    }
+
+    let currentMode = 'fine';
+    let currentTop = 5;
+
+    const setActiveMode = (mode) => {
+        currentMode = mode;
+        if (btnFine) btnFine.classList.toggle('bg-blue-600', mode==='fine');
+        if (btnCount) btnCount.classList.toggle('bg-blue-600', mode==='count');
+    };
+    const setActiveTop = (top) => {
+        currentTop = top;
+        if (btn5) btn5.classList.toggle('bg-blue-600', top===5);
+        if (btn10) btn10.classList.toggle('bg-blue-600', top===10);
+    };
+
+    if (btnFine) btnFine.addEventListener('click', async () => { setActiveMode('fine'); await renderTopOffenders(currentMode, currentTop); });
+    if (btnCount) btnCount.addEventListener('click', async () => { setActiveMode('count'); await renderTopOffenders(currentMode, currentTop); });
+    if (btn5) btn5.addEventListener('click', async () => { setActiveTop(5); await renderTopOffenders(currentMode, currentTop); });
+    if (btn10) btn10.addEventListener('click', async () => { setActiveTop(10); await renderTopOffenders(currentMode, currentTop); });
+
+    // Initialize
+    setActiveMode(currentMode);
+    setActiveTop(currentTop);
 }
 
 // ============ CHART 4: XU HƯỚNG THEO KHUNG GIỜ (Line Chart với Gradient Fill) ============
