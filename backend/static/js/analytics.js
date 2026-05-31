@@ -367,17 +367,21 @@ function setupTopOffendersControls() {
     let btn5 = container.querySelector('[data-top="5"]');
     let btn10 = container.querySelector('[data-top="10"]');
     // if buttons missing create them
+    const baseBtnClass = 'px-3 py-1 rounded text-white text-sm transition-all duration-200';
+    const activeBtnClass = ['bg-blue-600', 'ring-2', 'ring-blue-300', 'shadow-md', 'scale-105'];
+    const inactiveBtnClass = ['bg-gray-700', 'hover:bg-gray-600'];
+
     if (!btn5) {
         btn5 = document.createElement('button');
         btn5.setAttribute('data-top','5');
-        btn5.className = 'px-3 py-1 rounded bg-blue-600 text-white text-sm';
+        btn5.className = `${baseBtnClass} bg-blue-600`;
         btn5.textContent = 'Top 5';
         container.appendChild(btn5);
     }
     if (!btn10) {
         btn10 = document.createElement('button');
         btn10.setAttribute('data-top','10');
-        btn10.className = 'px-3 py-1 rounded bg-gray-700 text-white text-sm';
+        btn10.className = `${baseBtnClass} bg-gray-700`;
         btn10.textContent = 'Top 10';
         container.appendChild(btn10);
     }
@@ -386,30 +390,44 @@ function setupTopOffendersControls() {
     if (!btnFine) {
         btnFine = document.createElement('button');
         btnFine.setAttribute('data-mode','fine');
-        btnFine.className = 'px-3 py-1 rounded bg-blue-600 text-white text-sm';
+        btnFine.className = `${baseBtnClass} bg-blue-600`;
         btnFine.textContent = 'Theo Tiền';
         container.insertBefore(btnFine, container.firstChild);
     }
     if (!btnCount) {
         btnCount = document.createElement('button');
         btnCount.setAttribute('data-mode','count');
-        btnCount.className = 'px-3 py-1 rounded bg-gray-700 text-white text-sm';
+        btnCount.className = `${baseBtnClass} bg-gray-700`;
         btnCount.textContent = 'Theo Số Vụ';
         container.insertBefore(btnCount, container.firstChild.nextSibling);
     }
+
+    // Ensure base transition class exists on template buttons too
+    [btnFine, btnCount, btn5, btn10].forEach((btn) => {
+        if (!btn) return;
+        baseBtnClass.split(' ').forEach(c => btn.classList.add(c));
+    });
 
     let currentMode = 'fine';
     let currentTop = 5;
 
     const setActiveMode = (mode) => {
         currentMode = mode;
-        if (btnFine) btnFine.classList.toggle('bg-blue-600', mode==='fine');
-        if (btnCount) btnCount.classList.toggle('bg-blue-600', mode==='count');
+        [btnFine, btnCount].forEach((btn) => {
+            if (!btn) return;
+            const isActive = btn.dataset.mode === mode;
+            activeBtnClass.forEach(c => btn.classList.toggle(c, isActive));
+            inactiveBtnClass.forEach(c => btn.classList.toggle(c, !isActive));
+        });
     };
     const setActiveTop = (top) => {
         currentTop = top;
-        if (btn5) btn5.classList.toggle('bg-blue-600', top===5);
-        if (btn10) btn10.classList.toggle('bg-blue-600', top===10);
+        [btn5, btn10].forEach((btn) => {
+            if (!btn) return;
+            const isActive = Number(btn.dataset.top) === top;
+            activeBtnClass.forEach(c => btn.classList.toggle(c, isActive));
+            inactiveBtnClass.forEach(c => btn.classList.toggle(c, !isActive));
+        });
     };
 
     if (btnFine) btnFine.addEventListener('click', async () => { setActiveMode('fine'); await renderTopOffenders(currentMode, currentTop); });
