@@ -421,6 +421,22 @@ async function loadViolationHistory() {
     }
 }
 
+function parseCurrencyToNumber(value) {
+    const raw = String(value ?? '');
+    const digits = raw.replace(/\D+/g, '');
+    return Number(digits) || 0;
+}
+
+function formatVND(value) {
+    const amount = typeof value === 'number' ? value : parseCurrencyToNumber(value);
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
 function displayViolationHistory(violations) {
     const tbody = document.getElementById('history-table-body');
     const emptyMsg = document.getElementById('history-empty');
@@ -448,7 +464,7 @@ const createdAt = localDate.toLocaleString('vi-VN');
                 <td class="px-4 py-3 font-semibold text-blue-400">${v.license_plate}</td>
                 <td class="px-4 py-3">${vehicleType}</td>
                 <td class="px-4 py-3 font-semibold">${(function(v){ const n=Number(v.alcohol_level); return (isFinite(n)?n.toFixed(2):'0.00'); })(v)}</td>
-                <td class="px-4 py-3 text-yellow-500 font-semibold">${v.fine_amount}</td>
+                <td class="px-4 py-3 text-yellow-500 font-semibold">${formatVND(v.fine_amount)}</td>
                 <td class="px-4 py-3 text-red-400">${v.points_deducted}</td>
                 <td class="px-4 py-3 text-gray-400">${createdAt}</td>
             </tr>
